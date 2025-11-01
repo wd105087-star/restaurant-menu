@@ -43,6 +43,8 @@
             cursor: pointer;
             font-weight: 500;
             transition: transform 0.2s, box-shadow 0.2s;
+            /* 新增修正: 確保按鈕不會被視為連結目標 */
+            text-decoration: none !important;
         }
         .cart-button:hover {
             transform: translateY(-1px);
@@ -77,6 +79,9 @@
             transition: transform 0.3s, box-shadow 0.3s;
             position: relative;
             overflow: hidden;
+            /* 新增修正: 確保卡片內容不會被視為連結目標 */
+            text-decoration: none !important;
+            user-select: none; /* 禁用選擇文本 */
         }
         .category-card:hover {
             transform: translateY(-2px);
@@ -137,6 +142,8 @@
             cursor: pointer;
             font-weight: 500;
             transition: transform 0.2s, box-shadow 0.2s;
+            /* 新增修正: 確保按鈕不會被視為連結目標 */
+            text-decoration: none !important;
         }
         .item-card button:hover {
             transform: translateY(-1px);
@@ -358,7 +365,7 @@
         let currentCategory = null;
         const defaultCategory = '主食'; 
 
-        // 【恢復動畫並確保功能】
+        // 菜單顯示邏輯
         function showCategoryItems(cat) {
             const container = document.getElementById('itemsContainer');
             const cards = document.querySelectorAll('.category-card');
@@ -463,8 +470,6 @@
         // 初始化
         updateCartCount();
         
-        // 【已移除】DOMContentLoaded 事件監聽器，因此網頁載入時不會自動展開菜單。
-
         renderOrderHistory();
     </script>
 </body>
