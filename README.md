@@ -43,7 +43,6 @@
             cursor: pointer;
             font-weight: 500;
             transition: transform 0.2s, box-shadow 0.2s;
-            /* 新增修正: 確保按鈕不會被視為連結目標 */
             text-decoration: none !important;
         }
         .cart-button:hover {
@@ -69,6 +68,7 @@
             margin-top: 24px;
             padding: 0 10px;
         }
+        /* 【關鍵修正】重新定義 category-card 的樣式，讓它像按鈕又像卡片 */
         .category-card { 
             background: white; 
             border-radius: 16px; 
@@ -79,9 +79,15 @@
             transition: transform 0.3s, box-shadow 0.3s;
             position: relative;
             overflow: hidden;
-            /* 新增修正: 確保卡片內容不會被視為連結目標 */
-            text-decoration: none !important;
-            user-select: none; /* 禁用選擇文本 */
+            
+            /* 重設按鈕預設樣式 */
+            border: none;
+            outline: none;
+            color: inherit;
+            font-family: inherit;
+            /* 禁用瀏覽器對可點擊元素的特殊處理 */
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
         }
         .category-card:hover {
             transform: translateY(-2px);
@@ -95,7 +101,9 @@
         .category-card.active {
             background: #fff5f2;
             border: 2px solid #ff5722;
+            padding: calc(24px - 2px); /* 調整內距以平衡邊框 */
         }
+        /* End of 【關鍵修正】 */
 
         /* 商品列表 (恢復動畫樣式) */
         #itemsContainer { 
@@ -142,7 +150,6 @@
             cursor: pointer;
             font-weight: 500;
             transition: transform 0.2s, box-shadow 0.2s;
-            /* 新增修正: 確保按鈕不會被視為連結目標 */
             text-decoration: none !important;
         }
         .item-card button:hover {
@@ -204,7 +211,7 @@
         /* 新的圖示聯絡區塊樣式 */
         .contact-info-icon {
             margin-top: 40px;
-            text-align: center; /* 讓內容居中 */
+            text-align: center; 
             padding: 20px 0;
         }
         .contact-info-icon p {
@@ -214,16 +221,16 @@
         }
         .ig-icon-link {
             text-decoration: none;
-            color: #833AB4; /* Instagram 紫色 */
+            color: #833AB4; 
             display: inline-block;
             transition: transform 0.2s, color 0.2s;
         }
         .ig-icon-link i {
-            font-size: 48px; /* 設定圖示大小 */
+            font-size: 48px; 
         }
         .ig-icon-link:hover {
-            color: #C135A2; /* 懸停變色 */
-            transform: scale(1.1); /* 懸停放大 */
+            color: #C135A2; 
+            transform: scale(1.1); 
         }
     </style>
 </head>
@@ -234,10 +241,10 @@
     </div>
 
     <div class="categories" aria-label="主要分類">
-        <div class="category-card" onclick="showCategoryItems('主食')"><div style="font-size:36px">🍜</div><h2>主食</h2></div>
-        <div class="category-card" onclick="showCategoryItems('小菜')"><div style="font-size:36px">🥬</div><h2>小菜</h2></div>
-        <div class="category-card" onclick="showCategoryItems('飲料')"><div style="font-size:36px">🥤</div><h2>飲料</h2></div>
-        <div class="category-card" onclick="showCategoryItems('甜點')"><div style="font-size:36px">🍮</div><h2>甜點</h2></div>
+        <button class="category-card" type="button" onclick="showCategoryItems('主食')"><div style="font-size:36px">🍜</div><h2>主食</h2></button>
+        <button class="category-card" type="button" onclick="showCategoryItems('小菜')"><div style="font-size:36px">🥬</div><h2>小菜</h2></button>
+        <button class="category-card" type="button" onclick="showCategoryItems('飲料')"><div style="font-size:36px">🥤</div><h2>飲料</h2></button>
+        <button class="category-card" type="button" onclick="showCategoryItems('甜點')"><div style="font-size:36px">🍮</div><h2>甜點</h2></button>
     </div>
 
     <div id="itemsContainer" aria-live="polite"></div>
