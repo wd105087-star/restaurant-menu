@@ -92,22 +92,20 @@
             border: 2px solid #ff5722;
         }
 
-        /* 商品列表 (【恢復動畫樣式】) */
+        /* 商品列表 (恢復動畫樣式) */
         #itemsContainer { 
             margin-top: 20px; 
-            display: grid; /* 預設為 grid，以便佔據空間 */
+            display: grid; 
             grid-template-columns: repeat(auto-fill, minmax(200px,1fr)); 
             gap: 16px;
-            opacity: 0; /* 預設隱藏並透明 */
-            transform: translateY(20px); /* 預設向下偏移 */
-            transition: opacity 0.3s ease-out, transform 0.3s ease-out, height 0.3s ease-out; /* 增加 height 過渡 */
-            overflow: hidden; /* 防止內容溢出 */
-            height: 0; /* 預設高度為0，讓它從無到有展開 */
+            opacity: 0; 
+            transform: translateY(20px); 
+            transition: opacity 0.3s ease-out, transform 0.3s ease-out; 
+            overflow: hidden;
         }
         #itemsContainer.show {
-            opacity: 1; /* 顯示時完全不透明 */
-            transform: translateY(0); /* 恢復正常位置 */
-            height: auto; /* 讓高度自動適應內容 */
+            opacity: 1; 
+            transform: translateY(0); 
         }
         .item-card { 
             background: white; 
@@ -371,13 +369,10 @@
                 container.classList.remove('show');
                 cards.forEach(card => card.classList.remove('active'));
                 currentCategory = null;
-                // 在動畫結束後再清空內容，避免內容在動畫中閃爍
-                container.addEventListener('transitionend', function handler() {
-                    if (!container.classList.contains('show')) { // 確保是收起動畫結束
-                        container.innerHTML = ''; 
-                        container.removeEventListener('transitionend', handler);
-                    }
-                });
+                // 延遲清空內容，讓收起動畫可以完整呈現
+                setTimeout(() => {
+                    container.innerHTML = '';
+                }, 300); // 這裡的 300ms 應與 CSS transition-duration 匹配
                 return;
             }
 
@@ -393,7 +388,6 @@
 
             if (items.length === 0) { 
                 container.innerHTML = '<p style="text-align:center;color:#666;padding:20px;">尚無商品</p>';
-                // 由於已經沒有 height:0 預設，這裡可以直接顯示
                 container.classList.add('show'); 
                 return; 
             }
@@ -469,16 +463,7 @@
         // 初始化
         updateCartCount();
         
-        // 確保 DOM 載入後，手動觸發點擊主食按鈕，強制顯示菜單
-        document.addEventListener('DOMContentLoaded', () => {
-            const defaultCard = document.querySelector('.category-card[onclick="showCategoryItems(\'主食\')"]');
-            if (defaultCard) {
-                // 這裡也使用非動畫的呼叫來初始化，避免首頁載入時的閃爍
-                showCategoryItems('主食'); 
-            } else {
-                showCategoryItems(defaultCategory); 
-            }
-        });
+        // 【已移除】DOMContentLoaded 事件監聽器，因此網頁載入時不會自動展開菜單。
 
         renderOrderHistory();
     </script>
