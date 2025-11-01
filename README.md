@@ -1,5 +1,4 @@
-雄中115的會沅制餐廳菜單系統
-<!DOCTYPE html>
+
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
@@ -214,7 +213,7 @@
         <button id="submitOrderBtn" onclick="submitOrder()" style="background:linear-gradient(45deg, #ff5722, #ff7043); color:white; border:none; padding:8px 16px; border-radius:8px; cursor:pointer; font-weight:500; transition:all 0.2s">送出訂單</button>
     </div>
 
-    <div id="orderHistory" style="margin-top:16px"></div>
+    <div id="orderHistory" style="margin-top:16px"></div> 
 
     <div id="cartModal" class="modal" role="dialog" aria-modal="true">
         <div class="modal-content">
@@ -226,6 +225,9 @@
     </div>
 
     <script>
+        // *** 【重要】請將此網址替換為您從 Google Apps Script 部署取得的 Web App URL ***
+        const GOOGLE_SHEETS_URL = 'YOUR_APPS_SCRIPT_URL_HERE'; 
+
         const menuData = {
             主食: [ { name:'招牌沅味炒麵', price:120 }, { name:'章魚小丸子', price:80 } ],
             小菜: [ { name:'花生一級棒', price:45 } ],
@@ -252,7 +254,6 @@
             const found = cart.find(i => i.name === name && i.price === price);
             if (found) found.quantity += qty; else cart.push({ name, price, quantity: qty });
             updateCartCount();
-            // renderCart(); // 不在加入時自動彈出或重繪購物車，僅更新計數
         }
 
         function changeQty(idx, delta) {
@@ -294,7 +295,7 @@
 
         // 商品分類顯示邏輯
         let currentCategory = null;
-        const defaultCategory = '主食'; // 預設開啟主食
+        const defaultCategory = '主食'; 
 
         function showCategoryItems(cat) {
             const container = document.getElementById('itemsContainer');
@@ -345,8 +346,14 @@
             }, 300);
         }
 
-        // 訂單處理邏輯
+        // 訂單處理邏輯 (傳送到 Google Sheets)
         function submitOrder() {
+            // 檢查 Google Sheets URL 是否已設定
+            if (GOOGLE_SHEETS_URL === https://script.google.com/macros/s/AKfycbxEE9Nu-_Ma0AG5awAawXJneZBh-oFo_n6jblQSF1dXnKjYCNMuFqDzNDB0-MGOgDPw/exec) {
+                alert('錯誤：請先將程式碼中的 GOOGLE_SHEETS_URL 替換為您的 Apps Script 網址！');
+                return;
+            }
+
             const nameEl = document.getElementById('customerName');
             const name = nameEl.value.trim();
             
@@ -354,63 +361,49 @@
             if (cart.length === 0) { alert('購物車為空，請先加入商品'); return; }
             
             const total = cart.reduce((s, it) => s + it.price * it.quantity, 0);
-            
-            if (!confirm(`確認送出訂單\n訂購人：${name}\n訂單總金額：NT$${total}\n\n注意：此訂單僅儲存於您的瀏覽器本機歷史。`)) return;
 
-            // 準備訂單資料
-            const order = {
+            if (!confirm(`確認送出訂單\n訂購人：${name}\n訂單總金額：NT$${total}\n\n注意：訂單將自動傳送到 Google 試算表。`)) return;
+            
+            // 準備訂單資料為 JSON 格式 (Apps Script 期望的格式)
+            const orderData = {
                 customer: name,
-                date: new Date().toISOString(),
-                items: cart.map(it => ({ name: it.name, price: it.price, quantity: it.quantity })),
-                total: total
+                total: total,
+                // 將所有商品資訊打包
+                items: cart.map(it => ({ name: it.name, price: it.price, quantity: it.quantity }))
             };
             
-            // 儲存到瀏覽器 localStorage (本地歷史)
-            saveOrderLocally(order);
-            
-            // 清空購物車和表單
-            cart = [];
-            document.getElementById('customerName').value = '';
-            
-            // 更新畫面
-            renderCart();
-            closeCart();
-            renderOrderHistory();
-            
-            // 顯示成功訊息
-            alert('訂單已儲存於您的本機瀏覽器歷史記錄！');
+            // 透過 fetch 將 JSON 資料 POST 給 Google Apps Script
+            fetch(GOOGLE_SHEETS_URL, {
+                method: 'POST',
+                mode: 'no-cors', // 必須設定為 no-cors，因為是跨網域提交
+                cache: 'no-cache',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(orderData)
+            })
+            .then(response => {
+                // 即使 response 成功，mode: 'no-cors' 也無法確認服務端是否成功處理，只能假設成功
+                
+                // 清空購物車和表單
+                cart = [];
+                document.getElementById('customerName').value = '';
+                updateCartCount();
+                renderCart();
+                closeCart();
+                
+                alert('✅ 訂單送出成功！請稍後在您的 Google 試算表中查看紀錄。');
+            })
+            .catch(error => {
+                console.error('Error submitting order:', error);
+                alert('❌ 訂單送出失敗！請檢查您的 Apps Script 網址是否正確。');
+            });
         }
 
-        // 本機儲存和歷史紀錄渲染
-        function saveOrderLocally(order) {
-            const key = 'orderHistory';
-            const arr = JSON.parse(localStorage.getItem(key) || '[]');
-            arr.unshift(order); // 最新的排在前面
-            localStorage.setItem(key, JSON.stringify(arr));
-        }
-
+        // 移除本地歷史紀錄功能
         function renderOrderHistory() {
-            const key = 'orderHistory';
-            const arr = JSON.parse(localStorage.getItem(key) || '[]');
             const el = document.getElementById('orderHistory');
-            if (!arr.length) { 
-                el.innerHTML = '<div style="background:white; padding:20px; border-radius:12px; text-align:center; color:#666;"><p>尚無歷史訂單</p></div>'; 
-                return; 
-            }
-            el.innerHTML = '<h3 style="margin-bottom:16px; color:#e65100; font-weight:600;">歷史訂單 (僅限本機)</h3>' + 
-                arr.map(o => `
-                    <div style="background:white; padding:16px; border-radius:12px; margin-top:12px; box-shadow:0 2px 12px rgba(255,87,34,0.1); transition:transform 0.2s" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
-                        <div style="display:flex; justify-content:space-between; margin-bottom:8px">
-                            <strong style="color:#e65100">${o.customer}</strong>
-                            <span style="color:#666">${new Date(o.date).toLocaleString()}</span>
-                        </div>
-                        <div style="color:#666">
-                            商品數量：<span style="color:#ff5722">${o.items.reduce((s,i)=>s+i.quantity,0)}</span>
-                            <span style="margin:0 8px">·</span>
-                            總金額：<span style="color:#ff5722">NT$${o.total}</span>
-                        </div>
-                    </div>
-                `).join('');
+            el.innerHTML = ''; // 清空該區塊
         }
 
         // 初始化
