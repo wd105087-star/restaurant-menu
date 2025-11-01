@@ -261,33 +261,4 @@
     </div>
     <script>
         // *** Google Apps Script URL 已整合於此 ***
-        const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbxEE9Nu-_Ma0AG5awAawXJneZBh-oFo_n6jblQSF1dXnKjYCNMuFqDzNDB0-MGOgDPw/exec'; 
-
-        // === 【已更新：加入所有菜單項目】 ===
-        const menuData = {
-            主食: [ 
-                { name:'招牌沅味炒麵 (原留)', price:120 }, 
-                { name:'章魚小丸子 (原留)', price:80 },
-                { name:'日式炒飯', price:60 },
-                { name:'總匯炒飯', price:80 },
-                { name:'總匯炒麵 (牛/羊/蝦/肉)', price:80 },
-                { name:'海鮮炒麵/飯', price:80 },
-                { name:'原味炒飯/炒麵', price:60 },
-                { name:'肉燥飯', price:40 }
-            ],
-            小菜: [ 
-                { name:'花生一級棒 (原留)', price:45 },
-                { name:'經典滷肉飯 (小菜)', price:45 },
-                { name:'炒時蔬', price:50 } 
-            ],
-            飲料: [ 
-                { name:'甜心紅茶 (原留)', price:35 }, 
-                { name:'特製迎賓酒 (原留)', price:60 },
-                { name:'可口可樂', price:25 }, 
-                { name:'雪碧/汽水', price:25 }, 
-                { name:'鹹檸檬七', price:30 }, 
-                { name:'珍珠奶茶', price:40 }, 
-                { name:'奶綠', price:40 }, 
-                { name:'奶茶', price:35 }, 
-                { name:'奶蓋紅茶', price:45 }, 
-                { name:'仙草/冬瓜', price
+        const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbxEE9Nu-_
