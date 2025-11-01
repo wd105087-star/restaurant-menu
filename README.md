@@ -226,190 +226,195 @@
 
     <script>
         // *** 【重要】請將此網址替換為您從 Google Apps Script 部署取得的 Web App URL ***
-        const GOOGLE_SHEETS_URL = 'YOUR_APPS_SCRIPT_URL_HERE'; 
+        const GOOGLE_SHEETS_URL = (https://script.google.com/macros/s/AKfycbxEE9Nu-_Ma0AG5awAawXJneZBh-oFo_n6jblQSF1dXnKjYCNMuFqDzNDB0-MGOgDPw/exec); 
 
-        const menuData = {
-            主食: [ { name:'招牌沅味炒麵', price:120 }, { name:'章魚小丸子', price:80 } ],
-            小菜: [ { name:'花生一級棒', price:45 } ],
-            飲料: [ { name:'甜心紅茶', price:35 }, { name:'特製迎賓酒', price:60 } ],
-            甜點: [ { name:'經典雪花布丁', price:40 } ]
-        };
+       <script>
+    // *** 【重要】請將此網址替換為您從 Google Apps Script 部署取得的 Web App URL ***
+    const GOOGLE_SHEETS_URL = https://script.google.com/macros/s/AKfycbxEE9Nu-_Ma0AG5awAawXJneZBh-oFo_n6jblQSF1dXnKjYCNMuFqDzNDB0-MGOgDPw/exec; 
 
-        // 單一購物車變數
-        let cart = [];
+    const menuData = {
+        主食: [ { name:'招牌沅味炒麵', price:120 }, { name:'章魚小丸子', price:80 } ],
+        小菜: [ { name:'花生一級棒', price:45 } ],
+        飲料: [ { name:'甜心紅茶', price:35 }, { name:'特製迎賓酒', price:60 } ],
+        甜點: [ { name:'經典雪花布丁', price:40 } ]
+    };
 
-        function updateCartCount() {
-            const count = cart.reduce((s, it) => s + it.quantity, 0);
-            document.querySelector('.cart-count').textContent = count;
-        }
+    // 單一購物車變數
+    let cart = [];
 
-        function openCart() {
-            document.getElementById('cartModal').classList.add('open');
-            renderCart();
-        }
-        function closeCart() { document.getElementById('cartModal').classList.remove('open'); }
+    function updateCartCount() {
+        const count = cart.reduce((s, it) => s + it.quantity, 0);
+        document.querySelector('.cart-count').textContent = count;
+    }
 
-        function addToCart(name, price, qty = 1) {
-            qty = Number(qty) || 1;
-            const found = cart.find(i => i.name === name && i.price === price);
-            if (found) found.quantity += qty; else cart.push({ name, price, quantity: qty });
-            updateCartCount();
-        }
+    function openCart() {
+        document.getElementById('cartModal').classList.add('open');
+        renderCart();
+    }
+    function closeCart() { document.getElementById('cartModal').classList.remove('open'); }
 
-        function changeQty(idx, delta) {
-            if (!cart[idx]) return;
-            cart[idx].quantity += delta;
-            if (cart[idx].quantity <= 0) cart.splice(idx,1);
-            renderCart();
-        }
-
-        function removeFromCart(index) {
-            cart.splice(index,1);
-            renderCart();
-        }
-
-        function renderCart() {
-            const container = document.getElementById('cartItems');
-            container.innerHTML = '';
-            let total = 0;
-            if (cart.length === 0) container.innerHTML = '<p>購物車是空的。</p>';
-            cart.forEach((it, idx) => {
-                const div = document.createElement('div');
-                div.className = 'cart-item';
-                const subtotal = it.price * it.quantity;
-                total += subtotal;
-                div.innerHTML = `
-                    <div style="font-weight:500">${it.name} × ${it.quantity}</div>
-                    <div style="display:flex; align-items:center; gap:8px">
-                        <span style="color:#ff5722; font-weight:500">NT$${subtotal}</span>
-                        <button onclick="changeQty(${idx}, -1)" style="padding:4px 8px; border:none; background:#f5f5f5; border-radius:4px; cursor:pointer; color:#666">－</button>
-                        <button onclick="changeQty(${idx}, 1)" style="padding:4px 8px; border:none; background:#f5f5f5; border-radius:4px; cursor:pointer; color:#666">＋</button>
-                        <button onclick="removeFromCart(${idx})" style="padding:4px 8px; border:none; background:#ffebee; border-radius:4px; cursor:pointer; color:#ff5722">刪除</button>
-                    </div>`;
-                container.appendChild(div);
-            });
-            document.getElementById('cartTotal').textContent = '總計：NT$' + total;
-            updateCartCount();
-        }
-
-
-        // 商品分類顯示邏輯
-        let currentCategory = null;
-        const defaultCategory = '主食'; 
-
-        function showCategoryItems(cat) {
-            const container = document.getElementById('itemsContainer');
-            const cards = document.querySelectorAll('.category-card');
-            
-            // 如果點擊的是當前分類，則收起
-            if (currentCategory === cat) {
-                container.classList.remove('show');
-                cards.forEach(card => {
-                    if (card.querySelector('h2').textContent === cat) {
-                        card.classList.remove('active');
-                    }
-                });
-                currentCategory = null;
-                setTimeout(() => {
-                    if (!currentCategory) container.innerHTML = '';
-                }, 300);
-                return;
-            }
-
-            // 更新當前分類樣式
-            currentCategory = cat;
-            cards.forEach(card => {
-                const isCurrentCategory = card.querySelector('h2').textContent === cat;
-                card.classList.toggle('active', isCurrentCategory);
-            });
-
-            const items = menuData[cat] || [];
-            if (items.length === 0) { 
-                container.innerHTML = '<p style="text-align:center;color:#666;padding:20px;">尚無商品</p>';
-                return; 
-            }
-
-            // 更新內容並顯示
-            container.classList.remove('show');
-            setTimeout(() => {
-                container.innerHTML = items.map(it => `
-                    <div class="item-card">
-                        <h3>${it.name}</h3>
-                        <p>NT$${it.price}</p>
-                        <div style="display:flex; gap:8px; align-items:center; margin-top:12px">
-                            <input class="item-qty" type="number" min="1" value="1" style="width:64px; padding:8px; border-radius:8px; border:1px solid #e0e0e0; background:#f8f9ff;">
-                            <button onclick="(function(btn){ const qty = parseInt(btn.parentElement.querySelector('.item-qty').value)||1; addToCart('${it.name}', ${it.price}, qty); })(this)">加入購物車</button>
-                        </div>
-                    </div>
-                `).join('');
-                container.classList.add('show');
-            }, 300);
-        }
-
-        // 訂單處理邏輯 (傳送到 Google Sheets)
-        function submitOrder() {
-            // 檢查 Google Sheets URL 是否已設定
-            if (GOOGLE_SHEETS_URL === https://script.google.com/macros/s/AKfycbxEE9Nu-_Ma0AG5awAawXJneZBh-oFo_n6jblQSF1dXnKjYCNMuFqDzNDB0-MGOgDPw/exec) {
-                alert('錯誤：請先將程式碼中的 GOOGLE_SHEETS_URL 替換為您的 Apps Script 網址！');
-                return;
-            }
-
-            const nameEl = document.getElementById('customerName');
-            const name = nameEl.value.trim();
-            
-            if (!name) { alert('請填寫訂購人姓名'); nameEl.focus(); return; }
-            if (cart.length === 0) { alert('購物車為空，請先加入商品'); return; }
-            
-            const total = cart.reduce((s, it) => s + it.price * it.quantity, 0);
-
-            if (!confirm(`確認送出訂單\n訂購人：${name}\n訂單總金額：NT$${total}\n\n注意：訂單將自動傳送到 Google 試算表。`)) return;
-            
-            // 準備訂單資料為 JSON 格式 (Apps Script 期望的格式)
-            const orderData = {
-                customer: name,
-                total: total,
-                // 將所有商品資訊打包
-                items: cart.map(it => ({ name: it.name, price: it.price, quantity: it.quantity }))
-            };
-            
-            // 透過 fetch 將 JSON 資料 POST 給 Google Apps Script
-            fetch(GOOGLE_SHEETS_URL, {
-                method: 'POST',
-                mode: 'no-cors', // 必須設定為 no-cors，因為是跨網域提交
-                cache: 'no-cache',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(orderData)
-            })
-            .then(response => {
-                // 即使 response 成功，mode: 'no-cors' 也無法確認服務端是否成功處理，只能假設成功
-                
-                // 清空購物車和表單
-                cart = [];
-                document.getElementById('customerName').value = '';
-                updateCartCount();
-                renderCart();
-                closeCart();
-                
-                alert('✅ 訂單送出成功！請稍後在您的 Google 試算表中查看紀錄。');
-            })
-            .catch(error => {
-                console.error('Error submitting order:', error);
-                alert('❌ 訂單送出失敗！請檢查您的 Apps Script 網址是否正確。');
-            });
-        }
-
-        // 移除本地歷史紀錄功能
-        function renderOrderHistory() {
-            const el = document.getElementById('orderHistory');
-            el.innerHTML = ''; // 清空該區塊
-        }
-
-        // 初始化
+    function addToCart(name, price, qty = 1) {
+        qty = Number(qty) || 1;
+        const found = cart.find(i => i.name === name && i.price === price);
+        if (found) found.quantity += qty; else cart.push({ name, price, quantity: qty });
         updateCartCount();
-        showCategoryItems(defaultCategory);
-        renderOrderHistory();
-    </script>
+    }
+
+    function changeQty(idx, delta) {
+        if (!cart[idx]) return;
+        cart[idx].quantity += delta;
+        if (cart[idx].quantity <= 0) cart.splice(idx,1);
+        renderCart();
+    }
+
+    function removeFromCart(index) {
+        cart.splice(index,1);
+        renderCart();
+    }
+
+    function renderCart() {
+        const container = document.getElementById('cartItems');
+        container.innerHTML = '';
+        let total = 0;
+        if (cart.length === 0) container.innerHTML = '<p>購物車是空的。</p>';
+        cart.forEach((it, idx) => {
+            const div = document.createElement('div');
+            div.className = 'cart-item';
+            const subtotal = it.price * it.quantity;
+            total += subtotal;
+            div.innerHTML = `
+                <div style="font-weight:500">${it.name} × ${it.quantity}</div>
+                <div style="display:flex; align-items:center; gap:8px">
+                    <span style="color:#ff5722; font-weight:500">NT$${subtotal}</span>
+                    <button onclick="changeQty(${idx}, -1)" style="padding:4px 8px; border:none; background:#f5f5f5; border-radius:4px; cursor:pointer; color:#666">－</button>
+                    <button onclick="changeQty(${idx}, 1)" style="padding:4px 8px; border:none; background:#f5f5f5; border-radius:4px; cursor:pointer; color:#666">＋</button>
+                    <button onclick="removeFromCart(${idx})" style="padding:4px 8px; border:none; background:#ffebee; border-radius:4px; cursor:pointer; color:#ff5722">刪除</button>
+                </div>`;
+            container.appendChild(div);
+        });
+        document.getElementById('cartTotal').textContent = '總計：NT$' + total;
+        updateCartCount();
+    }
+
+
+    // 商品分類顯示邏輯
+    let currentCategory = null;
+    const defaultCategory = '主食'; 
+
+    function showCategoryItems(cat) {
+        const container = document.getElementById('itemsContainer');
+        const cards = document.querySelectorAll('.category-card');
+        
+        // 如果點擊的是當前分類，則收起
+        if (currentCategory === cat) {
+            container.classList.remove('show');
+            cards.forEach(card => {
+                if (card.querySelector('h2').textContent === cat) {
+                    card.classList.remove('active');
+                }
+            });
+            currentCategory = null;
+            setTimeout(() => {
+                if (!currentCategory) container.innerHTML = '';
+            }, 300);
+            return;
+        }
+
+        // 更新當前分類樣式
+        currentCategory = cat;
+        cards.forEach(card => {
+            const isCurrentCategory = card.querySelector('h2').textContent === cat;
+            card.classList.toggle('active', isCurrentCategory);
+        });
+
+        const items = menuData[cat] || [];
+        if (items.length === 0) { 
+            container.innerHTML = '<p style="text-align:center;color:#666;padding:20px;">尚無商品</p>';
+            return; 
+        }
+
+        // 更新內容並顯示
+        container.classList.remove('show');
+        setTimeout(() => {
+            container.innerHTML = items.map(it => `
+                <div class="item-card">
+                    <h3>${it.name}</h3>
+                    <p>NT$${it.price}</p>
+                    <div style="display:flex; gap:8px; align-items:center; margin-top:12px">
+                        <input class="item-qty" type="number" min="1" value="1" style="width:64px; padding:8px; border-radius:8px; border:1px solid #e0e0e0; background:#f8f9ff;">
+                        <button onclick="(function(btn){ const qty = parseInt(btn.parentElement.querySelector('.item-qty').value)||1; addToCart('${it.name}', ${it.price}, qty); })(this)">加入購物車</button>
+                    </div>
+                </div>
+            `).join('');
+            container.classList.add('show');
+        }, 300);
+    }
+
+    // 訂單處理邏輯 (傳送到 Google Sheets)
+    function submitOrder() {
+        // 檢查 Google Sheets URL 是否已設定
+        if (GOOGLE_SHEETS_URL === 'YOUR_APPS_SCRIPT_URL_HERE') {
+            alert('錯誤：請先將程式碼中的 GOOGLE_SHEETS_URL 替換為您的 Apps Script 網址！');
+            return;
+        }
+
+        const nameEl = document.getElementById('customerName');
+        const name = nameEl.value.trim();
+        
+        if (!name) { alert('請填寫訂購人姓名'); nameEl.focus(); return; }
+        if (cart.length === 0) { alert('購物車為空，請先加入商品'); return; }
+        
+        const total = cart.reduce((s, it) => s + it.price * it.quantity, 0);
+
+        if (!confirm(`確認送出訂單\n訂購人：${name}\n訂單總金額：NT$${total}\n\n注意：訂單將自動傳送到 Google 試算表。`)) return;
+        
+        // 準備訂單資料為 JSON 格式 (Apps Script 期望的格式)
+        const orderData = {
+            customer: name,
+            total: total,
+            items: cart.map(it => ({ name: it.name, price: it.price, quantity: it.quantity }))
+        };
+        
+        // 透過 fetch 將 JSON 資料 POST 給 Google Apps Script
+        fetch(GOOGLE_SHEETS_URL, {
+            method: 'POST',
+            mode: 'no-cors', 
+            cache: 'no-cache',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(orderData)
+        })
+        .then(response => {
+            // 由於 mode: 'no-cors'，無法確認服務端是否成功處理，只能假設成功
+            
+            // 清空購物車和表單
+            cart = [];
+            document.getElementById('customerName').value = '';
+            updateCartCount();
+            renderCart();
+            closeCart();
+            
+            alert('✅ 訂單送出成功！請稍後在您的 Google 試算表中查看紀錄。');
+        })
+        .catch(error => {
+            console.error('Error submitting order:', error);
+            alert('❌ 訂單送出失敗！請檢查您的 Apps Script 網址是否正確。');
+        });
+    }
+
+    // 移除本地歷史紀錄功能
+    function renderOrderHistory() {
+        const el = document.getElementById('orderHistory');
+        el.innerHTML = ''; // 清空該區塊
+    }
+
+    // *** 這是修復的關鍵部分：在頁面載入時執行這兩個函式 ***
+    // 1. 初始化購物車計數
+    updateCartCount();
+    // 2. 顯示預設分類的餐點 (讓一開始不會空白)
+    showCategoryItems(defaultCategory);
+    // 3. 清空舊的本地訂單歷史區塊
+    renderOrderHistory();
 </body>
 </html>
