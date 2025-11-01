@@ -92,21 +92,22 @@
             border: 2px solid #ff5722;
         }
 
-        /* 商品列表 (已修改樣式以減少晃動) */
+        /* 商品列表 (【恢復動畫樣式】) */
         #itemsContainer { 
             margin-top: 20px; 
-            display: grid; 
+            display: grid; /* 預設為 grid，以便佔據空間 */
             grid-template-columns: repeat(auto-fill, minmax(200px,1fr)); 
             gap: 16px;
-            opacity: 0;
-            transform: translateY(20px);
-            transition: opacity 0.3s, transform 0.3s;
-            min-height: 120px; /* 鎖定最小高度 */
-            overflow: hidden; 
+            opacity: 0; /* 預設隱藏並透明 */
+            transform: translateY(20px); /* 預設向下偏移 */
+            transition: opacity 0.3s ease-out, transform 0.3s ease-out, height 0.3s ease-out; /* 增加 height 過渡 */
+            overflow: hidden; /* 防止內容溢出 */
+            height: 0; /* 預設高度為0，讓它從無到有展開 */
         }
         #itemsContainer.show {
-            opacity: 1;
-            transform: translateY(0);
+            opacity: 1; /* 顯示時完全不透明 */
+            transform: translateY(0); /* 恢復正常位置 */
+            height: auto; /* 讓高度自動適應內容 */
         }
         .item-card { 
             background: white; 
@@ -261,4 +262,225 @@
     </div>
     <script>
         // *** Google Apps Script URL 已整合於此 ***
-        const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbxEE9Nu-_
+        const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbxEE9Nu-_Ma0AG5awAawXJneZBh-oFo_n6jblQSF1dXnKjYCNMuFqDzNDB0-MGOgDPw/exec'; 
+
+        // === 【所有菜單項目】 ===
+        const menuData = {
+            主食: [ 
+                { name:'招牌沅味炒麵 (原留)', price:120 }, 
+                { name:'章魚小丸子 (原留)', price:80 },
+                { name:'日式炒飯', price:60 },
+                { name:'總匯炒飯', price:80 },
+                { name:'總匯炒麵 (牛/羊/蝦/肉)', price:80 },
+                { name:'海鮮炒麵/飯', price:80 },
+                { name:'原味炒飯/炒麵', price:60 },
+                { name:'肉燥飯', price:40 }
+            ],
+            小菜: [ 
+                { name:'花生一級棒 (原留)', price:45 },
+                { name:'經典滷肉飯 (小菜)', price:45 },
+                { name:'炒時蔬', price:50 } 
+            ],
+            飲料: [ 
+                { name:'甜心紅茶 (原留)', price:35 }, 
+                { name:'特製迎賓酒 (原留)', price:60 },
+                { name:'可口可樂', price:25 }, 
+                { name:'雪碧/汽水', price:25 }, 
+                { name:'鹹檸檬七', price:30 }, 
+                { name:'珍珠奶茶', price:40 }, 
+                { name:'奶綠', price:40 }, 
+                { name:'奶茶', price:35 }, 
+                { name:'奶蓋紅茶', price:45 }, 
+                { name:'仙草/冬瓜', price:30 } 
+            ],
+            甜點: [ 
+                { name:'經典雪花布丁 (原留)', price:40 },
+                { name:'手工布丁', price:40 } 
+            ]
+        };
+        // ===================================
+
+        let cart = [];
+
+        function updateCartCount() {
+            const count = cart.reduce((s, it) => s + it.quantity, 0);
+            document.querySelector('.cart-count').textContent = count;
+        }
+
+        function openCart() {
+            document.getElementById('cartModal').classList.add('open');
+            renderCart();
+        }
+        function closeCart() { document.getElementById('cartModal').classList.remove('open'); }
+
+        function addToCart(name, price, qty = 1) {
+            qty = Number(qty) || 1;
+            const found = cart.find(i => i.name === name && i.price === price);
+            if (found) found.quantity += qty; else cart.push({ name, price, quantity: qty });
+            updateCartCount();
+        }
+
+        function changeQty(idx, delta) {
+            if (!cart[idx]) return;
+            cart[idx].quantity += delta;
+            if (cart[idx].quantity <= 0) cart.splice(idx,1);
+            renderCart();
+        }
+
+        function removeFromCart(index) {
+            cart.splice(index,1);
+            renderCart();
+        }
+
+        function renderCart() {
+            const container = document.getElementById('cartItems');
+            container.innerHTML = '';
+            let total = 0;
+            if (cart.length === 0) container.innerHTML = '<p>購物車是空的。</p>';
+            cart.forEach((it, idx) => {
+                const div = document.createElement('div');
+                div.className = 'cart-item';
+                const subtotal = it.price * it.quantity;
+                total += subtotal;
+                div.innerHTML = `
+                    <div style="font-weight:500">${it.name} × ${it.quantity}</div>
+                    <div style="display:flex; align-items:center; gap:8px">
+                        <span style="color:#ff5722; font-weight:500">NT$${subtotal}</span>
+                        <button onclick="changeQty(${idx}, -1)" style="padding:4px 8px; border:none; background:#f5f5f5; border-radius:4px; cursor:pointer; color:#666">－</button>
+                        <button onclick="changeQty(${idx}, 1)" style="padding:4px 8px; border:none; background:#f5f5f5; border-radius:4px; cursor:pointer; color:#666">＋</button>
+                        <button onclick="removeFromCart(${idx})" style="padding:4px 8px; border:none; background:#ffebee; border-radius:4px; cursor:pointer; color:#ff5722">刪除</button>
+                    </div>`;
+                container.appendChild(div);
+            });
+            document.getElementById('cartTotal').textContent = '總計：NT$' + total;
+            updateCartCount();
+        }
+
+
+        let currentCategory = null;
+        const defaultCategory = '主食'; 
+
+        // 【恢復動畫並確保功能】
+        function showCategoryItems(cat) {
+            const container = document.getElementById('itemsContainer');
+            const cards = document.querySelectorAll('.category-card');
+            const items = menuData[cat] || [];
+
+            // 1. 處理收起舊分類邏輯：
+            if (currentCategory === cat) {
+                container.classList.remove('show');
+                cards.forEach(card => card.classList.remove('active'));
+                currentCategory = null;
+                // 在動畫結束後再清空內容，避免內容在動畫中閃爍
+                container.addEventListener('transitionend', function handler() {
+                    if (!container.classList.contains('show')) { // 確保是收起動畫結束
+                        container.innerHTML = ''; 
+                        container.removeEventListener('transitionend', handler);
+                    }
+                });
+                return;
+            }
+
+            // 2. 處理顯示新分類邏輯：
+            container.classList.remove('show'); // 先確保沒有 show class
+            container.innerHTML = ''; // 清空內容
+
+            currentCategory = cat;
+            cards.forEach(card => {
+                const isCurrentCategory = card.querySelector('h2').textContent === cat;
+                card.classList.toggle('active', isCurrentCategory);
+            });
+
+            if (items.length === 0) { 
+                container.innerHTML = '<p style="text-align:center;color:#666;padding:20px;">尚無商品</p>';
+                // 由於已經沒有 height:0 預設，這裡可以直接顯示
+                container.classList.add('show'); 
+                return; 
+            }
+
+            // 3. 渲染內容，然後再觸發動畫
+            container.innerHTML = items.map(it => `
+                <div class="item-card">
+                    <h3>${it.name}</h3>
+                    <p>NT$${it.price}</p>
+                    <div style="display:flex; gap:8px; align-items:center; margin-top:12px">
+                        <input class="item-qty" type="number" min="1" value="1" style="width:64px; padding:8px; border-radius:8px; border:1px solid #e0e0e0; background:#f8f9ff;">
+                        <button onclick="(function(btn){ const qty = parseInt(btn.parentElement.querySelector('.item-qty').value)||1; addToCart('${it.name}', ${it.price}, qty); })(this)">加入購物車</button>
+                    </div>
+                </div>
+            `).join('');
+
+            // 使用 requestAnimationFrame 確保內容已經繪製到 DOM，然後再添加 'show' class 觸發 CSS 動畫
+            requestAnimationFrame(() => {
+                container.classList.add('show');
+            });
+        }
+
+        // 訂單處理邏輯 (傳送到 Google Sheets)
+        function submitOrder() {
+            const nameEl = document.getElementById('customerName');
+            const name = nameEl.value.trim();
+            
+            if (!name) { alert('請填寫訂購人姓名'); nameEl.focus(); return; }
+            if (cart.length === 0) { alert('購物車為空，請先加入商品'); return; }
+            
+            const total = cart.reduce((s, it) => s + it.price * it.quantity, 0);
+
+            if (!confirm(`確認送出訂單\n訂購人：${name}\n訂單總金額：NT$${total}\n\n注意：訂單將自動傳送到 Google 試算表。`)) return;
+            
+            // 準備訂單資料為 JSON 格式
+            const orderData = {
+                customer: name,
+                total: total,
+                items: cart.map(it => ({ name: it.name, price: it.price, quantity: it.quantity }))
+            };
+            
+            // 透過 fetch 將 JSON 資料 POST 給 Google Apps Script
+            fetch(GOOGLE_SHEETS_URL, {
+                method: 'POST',
+                mode: 'no-cors', 
+                cache: 'no-cache',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(orderData)
+            })
+            .then(response => {
+                // 清空購物車和表單
+                cart = [];
+                document.getElementById('customerName').value = '';
+                updateCartCount();
+                renderCart();
+                closeCart();
+                
+                alert('✅ 訂單送出成功！請稍後在您的 Google 試算表中查看紀錄。');
+            })
+            .catch(error => {
+                console.error('Error submitting order:', error);
+                alert('❌ 訂單送出失敗！請檢查您的 Apps Script 部署狀態。');
+            });
+        }
+
+        function renderOrderHistory() {
+            const el = document.getElementById('orderHistory');
+            el.innerHTML = ''; 
+        }
+
+        // 初始化
+        updateCartCount();
+        
+        // 確保 DOM 載入後，手動觸發點擊主食按鈕，強制顯示菜單
+        document.addEventListener('DOMContentLoaded', () => {
+            const defaultCard = document.querySelector('.category-card[onclick="showCategoryItems(\'主食\')"]');
+            if (defaultCard) {
+                // 這裡也使用非動畫的呼叫來初始化，避免首頁載入時的閃爍
+                showCategoryItems('主食'); 
+            } else {
+                showCategoryItems(defaultCategory); 
+            }
+        });
+
+        renderOrderHistory();
+    </script>
+</body>
+</html>
