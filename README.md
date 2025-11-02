@@ -68,7 +68,7 @@
             margin-top: 24px;
             padding: 0 10px;
         }
-        /* 【關鍵修正】重新定義 category-card 的樣式，讓它像按鈕又像卡片 */
+        /* 【保留修正】分類卡片使用按鈕樣式 */
         .category-card { 
             background: white; 
             border-radius: 16px; 
@@ -101,11 +101,10 @@
         .category-card.active {
             background: #fff5f2;
             border: 2px solid #ff5722;
-            padding: calc(24px - 2px); /* 調整內距以平衡邊框 */
+            padding: calc(24px - 2px); 
         }
-        /* End of 【關鍵修正】 */
 
-        /* 商品列表 (恢復動畫樣式) */
+        /* 商品列表 (動畫樣式) */
         #itemsContainer { 
             margin-top: 20px; 
             display: grid; 
@@ -208,7 +207,7 @@
             color: #ff5722;
         }
 
-        /* 新的圖示聯絡區塊樣式 */
+        /* 聯絡區塊樣式 */
         .contact-info-icon {
             margin-top: 40px;
             text-align: center; 
@@ -278,15 +277,11 @@
 
         // === 【所有菜單項目】 ===
         const menuData = {
+            // 【主食菜單已修正為三個品項】
             主食: [ 
-                { name:'招牌沅味炒麵 (原留)', price:120 }, 
-                { name:'章魚小丸子 (原留)', price:80 },
-                { name:'日式炒飯', price:60 },
-                { name:'總匯炒飯', price:80 },
-                { name:'總匯炒麵 (牛/羊/蝦/肉)', price:80 },
-                { name:'海鮮炒麵/飯', price:80 },
-                { name:'原味炒飯/炒麵', price:60 },
-                { name:'肉燥飯', price:40 }
+                { name:'經典日式炒麵麵包', price:50 }, 
+                { name:'極霸炒麵麵包', price:65 },
+                { name:'特盛！大極霸炒麵麵包', price:110 }
             ],
             小菜: [ 
                 { name:'花生一級棒 (原留)', price:45 },
