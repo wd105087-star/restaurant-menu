@@ -68,7 +68,6 @@
             margin-top: 24px;
             padding: 0 10px;
         }
-        /* 【保留修正】分類卡片使用按鈕樣式 */
         .category-card { 
             background: white; 
             border-radius: 16px; 
@@ -79,13 +78,10 @@
             transition: transform 0.3s, box-shadow 0.3s;
             position: relative;
             overflow: hidden;
-            
-            /* 重設按鈕預設樣式 */
             border: none;
             outline: none;
             color: inherit;
             font-family: inherit;
-            /* 禁用瀏覽器對可點擊元素的特殊處理 */
             -webkit-tap-highlight-color: transparent;
             user-select: none;
         }
@@ -104,7 +100,6 @@
             padding: calc(24px - 2px); 
         }
 
-        /* 商品列表 (動畫樣式) */
         #itemsContainer { 
             margin-top: 20px; 
             display: grid; 
@@ -279,7 +274,7 @@
         </a>
     </div>
     <script>
-        // *** Google Apps Script URL 已整合於此 ***
+        // 【重要：請替換成您最新部署的 Apps Script 網址！】
         const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbxEE9Nu-_Ma0AG5awAawXJneZBh-oFo_n6jblQSF1dXnKjYCNMuFqDzNDB0-MGOgDPw/exec'; 
 
         // === 【所有菜單項目】 ===
@@ -393,25 +388,19 @@
         let currentCategory = null;
         const defaultCategory = '主食'; 
 
-        // 菜單顯示邏輯
         function showCategoryItems(cat) {
             const container = document.getElementById('itemsContainer');
             const cards = document.querySelectorAll('.category-card');
             const items = menuData[cat] || [];
 
-            // 1. 處理收起舊分類邏輯：
             if (currentCategory === cat) {
                 container.classList.remove('show');
                 cards.forEach(card => card.classList.remove('active'));
                 currentCategory = null;
-                // 延遲清空內容，讓收起動畫可以完整呈現
-                setTimeout(() => {
-                    container.innerHTML = '';
-                }, 300); 
+                setTimeout(() => { container.innerHTML = ''; }, 300); 
                 return;
             }
 
-            // 2. 處理顯示新分類邏輯：
             container.classList.remove('show'); 
             container.innerHTML = ''; 
 
@@ -427,7 +416,6 @@
                 return; 
             }
 
-            // 3. 渲染內容，然後再觸發動畫
             container.innerHTML = items.map(it => `
                 <div class="item-card">
                     <h3>${it.name}</h3>
@@ -452,7 +440,7 @@
             const pickupDate = document.getElementById('pickupDate').value;
             const pickupTime = document.getElementById('pickupTime').value;
             
-            // 將日期和時間合併為一個字串 (例如 "2025-11-15 09:30")
+            // 合併為字串 (例如 "2025-11-15 09:30")
             const fullPickupTime = pickupDate + ' ' + pickupTime; 
             
             if (!name) { alert('請填寫訂購人姓名'); nameEl.focus(); return; }
@@ -464,15 +452,12 @@
 
             if (!confirm(`確認送出訂單\n訂購人：${name}\n取餐時間：${pickupDate} ${pickupTime}\n訂單總金額：NT$${total}\n\n注意：訂單將自動傳送到 Google 試算表。`)) return;
             
-            // 準備訂單資料為 JSON 格式 (重點：欄位順序已調整)
+            // 準備訂單資料為 JSON 格式 (順序：customer, total, items, pickupTime)
             const orderData = {
-                // 1. 訂購人姓名 (customer)
                 customer: name, 
-                // 2. 總金額 (total)
                 total: total, 
-                // 3. 訂購項目 (items)
-                items: JSON.stringify(cart.map(it => `${it.name} x${it.quantity} ($${it.price})`)), 
-                // 4. 取餐時間 (pickupTime) - 放在最後
+                // *** 關鍵修正：使用 .join('\n') 避免中括號 ***
+                items: cart.map(it => `${it.name} x${it.quantity} (NT$${it.price})`).join('\n'),
                 pickupTime: fullPickupTime 
             };
             
