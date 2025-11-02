@@ -422,7 +422,12 @@
                     <p>NT$${it.price}</p>
                     <div style="display:flex; gap:8px; align-items:center; margin-top:12px">
                         <input class="item-qty" type="number" min="1" value="1" style="width:64px; padding:8px; border-radius:8px; border:1px solid #e0e0e0; background:#f8f9ff;">
-                        <button onclick="(function(btn){ const qty = parseInt(btn.parentElement.querySelector('.item-qty').value)||1; addToCart('${it.name}', ${it.price}, qty); })(this)">加入購物車</button>
+                        <button onclick="(function(btn){ 
+                            const qtyInput = btn.parentElement.querySelector('.item-qty');
+                            const qty = parseInt(qtyInput.value)||1; 
+                            addToCart('${it.name}', ${it.price}, qty); 
+                            qtyInput.value = 1; // 重設數量輸入框
+                        })(this)">加入購物車</button>
                     </div>
                 </div>
             `).join('');
@@ -450,13 +455,14 @@
             
             const total = cart.reduce((s, it) => s + it.price * it.quantity, 0);
 
-            if (!confirm(`確認送出訂單\n訂購人：${name}\n取餐時間：${pickupDate} ${pickupTime}\n訂單總金額：NT$${total}\n\n注意：訂單將自動傳送到 Google 試算表。`)) return;
+            // 修正 2: 移除確認視窗中的「注意」文字
+            if (!confirm(`確認送出訂單\n訂購人：${name}\n取餐時間：${pickupDate} ${pickupTime}\n訂單總金額：NT$${total}`)) return;
             
             // 準備訂單資料為 JSON 格式 (順序：customer, total, items, pickupTime)
             const orderData = {
                 customer: name, 
                 total: total, 
-                // *** 關鍵修正：使用 .join('\n') 避免中括號 ***
+                // 使用 .join('\n') 避免中括號
                 items: cart.map(it => `${it.name} x${it.quantity} (NT$${it.price})`).join('\n'),
                 pickupTime: fullPickupTime 
             };
@@ -479,7 +485,8 @@
                 renderCart();
                 closeCart();
                 
-                alert('✅ 訂單送出成功！請稍後在您的 Google 試算表中查看紀錄。');
+                // 修正 3: 簡化成功提示訊息
+                alert('✅ 訂單送出成功！');
             })
             .catch(error => {
                 console.error('Error submitting order:', error);
