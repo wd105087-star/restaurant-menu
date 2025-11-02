@@ -369,7 +369,6 @@
             updateCartCount();
         }
 
-        // 【保留】生成取餐時間選項
         function generateTimeSlots() {
             const startTimeMin = 9 * 60 + 30; // 9:30
             const endTimeMin = 13 * 60 + 30; // 13:30
@@ -453,9 +452,8 @@
             const pickupDate = document.getElementById('pickupDate').value;
             const pickupTime = document.getElementById('pickupTime').value;
             
-            // 【關鍵步驟】將取餐日期和時間合併為一個 ISO 時間字串
-            // 使用 T00:00:00.000Z 作為日期，然後再加上時間，確保 Apps Script 可以解析為日期時間格式
-            const pickupTimestamp = pickupDate + ' ' + pickupTime; // 格式: "2025-11-15 09:30"
+            // 將日期和時間合併為一個字串 (例如 "2025-11-15 09:30")
+            const fullPickupTime = pickupDate + ' ' + pickupTime; 
             
             if (!name) { alert('請填寫訂購人姓名'); nameEl.focus(); return; }
             if (!pickupDate) { alert('請選擇取餐日期'); return; }
@@ -466,13 +464,16 @@
 
             if (!confirm(`確認送出訂單\n訂購人：${name}\n取餐時間：${pickupDate} ${pickupTime}\n訂單總金額：NT$${total}\n\n注意：訂單將自動傳送到 Google 試算表。`)) return;
             
-            // 準備訂單資料為 JSON 格式
+            // 準備訂單資料為 JSON 格式 (重點：欄位順序已調整)
             const orderData = {
-                // 【關鍵替換】使用 'timestamp' 鍵值來傳送預計取餐時間
-                timestamp: pickupTimestamp,
-                customer: name,
-                total: total,
-                items: cart.map(it => ({ name: it.name, price: it.price, quantity: it.quantity }))
+                // 1. 訂購人姓名 (customer)
+                customer: name, 
+                // 2. 總金額 (total)
+                total: total, 
+                // 3. 訂購項目 (items)
+                items: JSON.stringify(cart.map(it => `${it.name} x${it.quantity} ($${it.price})`)), 
+                // 4. 取餐時間 (pickupTime) - 放在最後
+                pickupTime: fullPickupTime 
             };
             
             // 透過 fetch 將 JSON 資料 POST 給 Google Apps Script
