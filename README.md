@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
-        /* [大量 CSS 樣式碼在此處略過，與功能無關] */
+        /* [CSS 樣式碼在此處略過，與功能無關] */
         body { 
             font-family: 'Noto Sans TC', Arial, sans-serif; 
             margin: 0; 
@@ -228,7 +228,7 @@
             transform: scale(1.1); 
         }
         /* 針對禁用欄位的樣式 */
-        input[readonly], select[disabled] {
+        input[readonly] {
             cursor: not-allowed;
             background-color: #f1f1f1 !important;
             color: #555;
@@ -255,10 +255,10 @@
         <input id="customerName" type="text" placeholder="請輸入姓名" style="padding:8px 12px; border-radius:8px; border:1px solid #e0e0e0; background:#f8f9ff; font-size:15px; width: 120px;">
         
         <label for="pickupDate" style="font-weight:500; color:#e65100;">取餐日期：</label>
-        <input id="pickupDate" type="date" value="2025-11-15" readonly style="padding:8px 12px; border-radius:8px; border:1px solid #e0e0e0; background:#f8f9ff; font-size:15px; width: 140px;">
+        <input id="pickupDate" type="date" value="2025-11-15" readonly style="padding:8px 12px; border-radius:8px; border:1px solid #e0e0e0; background:#f1f1f1; font-size:15px; width: 140px; cursor: not-allowed;">
         
         <label for="pickupTime" style="font-weight:500; color:#e65100;">取餐時間：</label>
-        <select id="pickupTime" disabled style="padding:8px 12px; border-radius:8px; border:1px solid #e0e0e0; background:#f8f9ff; font-size:15px; width: 100px;"></select>
+        <select id="pickupTime" style="padding:8px 12px; border-radius:8px; border:1px solid #e0e0e0; background:#f8f9ff; font-size:15px; width: 100px;"></select>
 
         <button id="submitOrderBtn" onclick="submitOrder()" style="background:linear-gradient(45deg, #ff5722, #ff7043); color:white; border:none; padding:8px 16px; border-radius:8px; cursor:pointer; font-weight:500; transition:all 0.2s">送出訂單</button>
     </div>
@@ -334,7 +334,7 @@
             if (found) found.quantity += qty; else cart.push({ name, price, quantity: qty });
             updateCartCount();
             
-            // 修正 2: 成功加入購物車提示
+            // 成功加入購物車提示
             alert('🛒 成功加入購物車！'); 
         }
 
@@ -374,19 +374,27 @@
             updateCartCount();
         }
 
+        // 修正: 恢復時間生成邏輯，讓使用者可以選擇時間
         function generateTimeSlots() {
             const startTimeMin = 9 * 60 + 30; // 9:30
             const endTimeMin = 13 * 60 + 30; // 13:30
             const interval = 15;
             const select = document.getElementById('pickupTime');
             
-            // 由於設置為 disabled，我們只需要確保它有一個預設選項
-            select.innerHTML = '';
-            const defaultOption = document.createElement('option');
-            defaultOption.value = '11:00'; // 假設設定一個固定的預設時間，例如 11:00
-            defaultOption.textContent = '11:00';
-            defaultOption.selected = true; // 設為預設選中
-            select.appendChild(defaultOption);
+            select.innerHTML = ''; // 清空先前的選項
+            
+            for (let currentMin = startTimeMin; currentMin <= endTimeMin; currentMin += interval) {
+                const hour = Math.floor(currentMin / 60);
+                const minute = currentMin % 60;
+                
+                // 格式化為 HH:MM
+                const timeStr = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+                
+                const option = document.createElement('option');
+                option.value = timeStr;
+                option.textContent = timeStr;
+                select.appendChild(option);
+            }
         }
 
 
@@ -447,9 +455,7 @@
             const nameEl = document.getElementById('customerName');
             const name = nameEl.value.trim();
             
-            // 由於設定了唯讀和禁用，我們直接讀取 value 即可
             const pickupDate = document.getElementById('pickupDate').value; 
-            // 禁用狀態的 select 仍可讀取其 value
             const pickupTime = document.getElementById('pickupTime').value; 
             
             // 合併為字串 (例如 "2025-11-15 11:00")
@@ -506,7 +512,7 @@
 
         // 初始化
         updateCartCount();
-        generateTimeSlots(); // 現在只會生成一個固定的時間
+        generateTimeSlots(); // 呼叫時間生成函數
         renderOrderHistory();
     </script>
 </body>
