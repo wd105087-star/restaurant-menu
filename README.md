@@ -151,6 +151,34 @@
             transform: translateY(-1px);
             box-shadow: 0 4px 12px rgba(255, 87, 34, 0.3);
         }
+        
+        /* 新增的選項樣式 */
+        .option-group {
+            margin-bottom: 10px;
+            padding: 5px 0;
+            border-top: 1px dashed #f0f0f0;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .option-group.inline {
+             flex-direction: row; 
+             align-items: center; 
+             justify-content: space-between;
+             border-top: none; 
+             padding-top: 0;
+        }
+        .option-group label {
+            font-size: 14px;
+            color: #555;
+            font-weight: 400;
+            margin: 0; 
+        }
+        select, input[type="checkbox"] {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 5px;
+        }
 
         /* 購物車彈窗 */
         .modal { 
@@ -243,7 +271,6 @@
 
     <div class="categories" aria-label="主要分類">
         <button class="category-card" type="button" onclick="showCategoryItems('主食')"><div style="font-size:36px">🍜</div><h2>主食</h2></button>
-        <button class="category-card" type="button" onclick="showCategoryItems('小菜')"><div style="font-size:36px">🥬</div><h2>小菜</h2></button>
         <button class="category-card" type="button" onclick="showCategoryItems('飲料')"><div style="font-size:36px">🥤</div><h2>飲料</h2></button>
         <button class="category-card" type="button" onclick="showCategoryItems('甜點')"><div style="font-size:36px">🍮</div><h2>甜點</h2></button>
     </div>
@@ -284,33 +311,22 @@
         // 【重要：請替換成您最新部署的 Apps Script 網址！】
         const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbxEE9Nu-_Ma0AG5awAawXJneZBh-oFo_n6jblQSF1dXnKjYCNMuFqDzNDB0-MGOgDPw/exec'; 
 
-        // === 【所有菜單項目】 ===
+        // === 【所有菜單項目 - 主食、飲料、甜點】 ===
         const menuData = {
             主食: [ 
-                { name:'經典日式炒麵麵包', price:50 }, 
-                { name:'極霸炒麵麵包', price:65 },
-                { name:'特盛！大極霸炒麵麵包', price:110 }
-            ],
-            小菜: [ 
-                { name:'花生一級棒 (原留)', price:45 },
-                { name:'經典滷肉飯 (小菜)', price:45 },
-                { name:'炒時蔬', price:50 } 
+                { name:'炒麵麵包 (原味)', price:50 }, 
+                { name:'極霸炒麵（牛肉+蝦仁）', price:65 },
+                { name:'超極霸炒麵 (肉量 max)', price:95 }
             ],
             飲料: [ 
-                { name:'甜心紅茶 (原留)', price:35 }, 
-                { name:'特製迎賓酒 (原留)', price:60 },
-                { name:'可口可樂', price:25 }, 
-                { name:'雪碧/汽水', price:25 }, 
-                { name:'鹹檸檬七', price:30 }, 
-                { name:'珍珠奶茶', price:40 }, 
-                { name:'奶綠', price:40 }, 
-                { name:'奶茶', price:35 }, 
-                { name:'奶蓋紅茶', price:45 }, 
-                { name:'仙草/冬瓜', price:30 } 
+                { name:'可樂', price:25 }, 
+                { name:'芬達', price:25 },
+                { name:'雪碧', price:25 }, 
+                { name:'迎賓酒', price:60 },
+                { name:'昏睡紅茶', price:35 } // 昏睡紅茶基本價
             ],
             甜點: [ 
-                { name:'經典雪花布丁 (原留)', price:40 },
-                { name:'手工布丁', price:40 } 
+                { name:'手工布丁', price:45 } 
             ]
         };
         // ===================================
@@ -328,6 +344,171 @@
         }
         function closeCart() { document.getElementById('cartModal').classList.remove('open'); }
 
+        function addToCart(name, price, qty = 1) {
+            qty = Number(qty) || 1;
+            // 由於商品名稱複雜且包含選項，每次加入都視為獨立項目。
+            cart.push({ name, price, quantity: qty });
+            updateCartCount();
+            
+            // 成功加入購物車提示
+            alert('🛒 成功加入購物車！'); 
+        }
+
+        function changeQty(idx, delta) {
+            if (!cart[idx]) return;
+            cart[idx].quantity += delta;
+            if (cart[idx].quantity <= 0) cart.splice(idx,1);
+            renderCart();
+        }
+
+        function removeFromCart(index) {
+            cart.splice(index,1);
+            renderCart();
+        }
+
+        function renderCart() {
+            const container = document.getElementById('cartItems');
+            container.innerHTML = '';
+            let total = 0;
+            if (cart.length === 0) container.innerHTML = '<p>購物車是空的。</p>';
+            cart.forEach((it, idx) => {
+                const div = document.createElement('div');
+                div.className = 'cart-item';
+                const subtotal = it.price * it.quantity;
+                total += subtotal;
+                div.innerHTML = `
+                    <div style="font-weight:500">${it.name} × ${it.quantity}</div>
+                    <div style="display:flex; align-items:center; gap:8px">
+                        <span style="color:#ff5722; font-weight:500">NT$${subtotal}</span>
+                        <button onclick="changeQty(${idx}, -1)" style="padding:4px 8px; border:none; background:#f5f5f5; border-radius:4px; cursor:pointer; color:#666">－</button>
+                        <button onclick="changeQty(${idx}, 1)" style="padding:4px 8px; border:none; background:#f5f5f5; border-radius:4px; cursor:pointer; color:#666">＋</button>
+                        <button onclick="removeFromCart(${idx})" style="padding:4px 8px; border:none; background:#ffebee; border-radius:4px; cursor:pointer; color:#ff5722">刪除</button>
+                    </div>`;
+                container.appendChild(div);
+            });
+            document.getElementById('cartTotal').textContent = '總計：NT$' + total;
+            updateCartCount();
+        }
+
+        function generateTimeSlots() {
+            const startTimeMin = 9 * 60 + 30; // 9:30
+            const endTimeMin = 13 * 60 + 30; // 13:30
+            const interval = 15;
+            const select = document.getElementById('pickupTime');
+            
+            select.innerHTML = ''; 
+            
+            for (let currentMin = startTimeMin; currentMin <= endTimeMin; currentMin += interval) {
+                const hour = Math.floor(currentMin / 60);
+                const minute = currentMin % 60;
+                
+                const timeStr = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+                
+                const option = document.createElement('option');
+                option.value = timeStr;
+                option.textContent = timeStr;
+                select.appendChild(option);
+            }
+        }
+
+
+        let currentCategory = null;
+
+        function showCategoryItems(cat) {
+            const container = document.getElementById('itemsContainer');
+            const cards = document.querySelectorAll('.category-card');
+            const items = menuData[cat] || [];
+
+            if (currentCategory === cat) {
+                container.classList.remove('show');
+                cards.forEach(card => card.classList.remove('active'));
+                currentCategory = null;
+                setTimeout(() => { container.innerHTML = ''; }, 300); 
+                return;
+            }
+
+            container.classList.remove('show'); 
+            container.innerHTML = ''; 
+
+            currentCategory = cat;
+            cards.forEach(card => {
+                const isCurrentCategory = card.querySelector('h2').textContent === cat;
+                card.classList.toggle('active', isCurrentCategory);
+            });
+
+            if (items.length === 0) { 
+                container.innerHTML = '<p style="text-align:center;color:#666;padding:20px;">尚無商品</p>';
+                container.classList.add('show'); 
+                return; 
+            }
+            
+            container.innerHTML = items.map((it, index) => {
+                let optionsHtml = '';
+                const itemID = `item-${cat}-${index}`; 
+                
+                if (cat === '主食') {
+                    // 主食選項
+                    optionsHtml = `
+                        <div class="option-group">
+                            <label for="${itemID}-flavor">選擇口味：</label>
+                            <select id="${itemID}-flavor">
+                                <option value="原味" selected>原味</option>
+                                <option value="海苔">海苔</option>
+                                <option value="沅味">沅味</option>
+                            </select>
+                        </div>
+                        <div class="option-group inline">
+                            <label for="${itemID}-egg" style="margin: 0;">加購糖心蛋 (+NT$15)</label>
+                            <input type="checkbox" id="${itemID}-egg" data-price="15" style="width: auto;">
+                        </div>
+                    `;
+                } else if (it.name === '昏睡紅茶') {
+                    // 修正：昏睡紅茶選項 (鮮奶茶改為加價選項)
+                    optionsHtml = `
+                        <div class="option-group inline">
+                            <label for="${itemID}-milk" style="font-weight: 500; color: #ff5722;">升級鮮奶茶 (+NT$5)</label>
+                            <input type="checkbox" id="${itemID}-milk" data-price="5" style="width: auto;">
+                        </div>
+
+                        <div class="option-group" style="padding-top: 0; border-top: none;">
+                            <label style="font-weight: 500; color: #ff5722;">加料/加糖 (每項+NT$5):</label>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px 15px; margin-top: 5px;">
+                                <div class="option-group inline">
+                                    <label for="${itemID}-sugar">致死量砂糖</label>
+                                    <input type="checkbox" id="${itemID}-sugar" data-price="5" style="width: auto;">
+                                </div>
+                                <div class="option-group inline">
+                                    <label for="${itemID}-pudding">粉粿</label>
+                                    <input type="checkbox" id="${itemID}-pudding" data-price="5" style="width: auto;">
+                                </div>
+                                <div class="option-group inline">
+                                    <label for="${itemID}-pearl">珍珠</label>
+                                    <input type="checkbox" id="${itemID}-pearl" data-price="5" style="width: auto;">
+                                </div>
+                                <div class="option-group inline">
+                                    <label for="${itemID}-grassjelly">仙草</label>
+                                    <input type="checkbox" id="${itemID}-grassjelly" data-price="5" style="width: auto;">
+                                </div>
+                                <div class="option-group inline">
+                                    <label for="${itemID}-qq">綜合QQ球</label>
+                                    <input type="checkbox" id="${itemID}-qq" data-price="5" style="width: auto;">
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else if (cat === '甜點') {
+                    // 甜點選項 (保持不變)
+                    optionsHtml = `
+                        <div style="height: 10px; border-top: 1px dashed #f0f0f0;"></div>
+                    `;
+                }
+
+                return `
+                    <div class="item-card">
+                        <h3>${it.name}</h3>
+                        <p id="${itemID}-price-display">NT$${it.price}</p>
+                        
+                        ${optionsHtml} <div style="display:flex; gap:8px; al
         function addToCart(name, price, qty = 1) {
             qty = Number(qty) || 1;
             const found = cart.find(i => i.name === name && i.price === price);
