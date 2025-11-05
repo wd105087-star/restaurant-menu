@@ -1,4 +1,4 @@
-
+<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
@@ -521,4 +521,181 @@
                                     <label for="${itemID}-grassjelly">仙草</label>
                                     <input type="checkbox" id="${itemID}-grassjelly" data-price="5" style="width: auto;">
                                 </div>
-          
+                                <div class="option-group inline">
+                                    <label for="${itemID}-qq">綜合QQ球</label>
+                                    <input type="checkbox" id="${itemID}-qq" data-price="5" style="width: auto;">
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    // 非主食或昏睡紅茶的普通商品 (其他飲料和甜點)
+                    optionsHtml = `
+                        <div style="height: 10px; border-top: 1px dashed #f0f0f0; margin-bottom: 15px;"></div>
+                    `;
+                }
+
+                return `
+                    <div class="item-card">
+                        <h3>${it.name}</h3>
+                        <p id="${itemID}-price-display">NT$${it.price}</p>
+                        
+                        ${optionsHtml} <div style="display:flex; gap:8px; align-items:center; margin-top:12px">
+                            <input class="item-qty" type="number" min="1" value="1" style="width:64px; padding:8px; border-radius:8px; border:1px solid #e0e0e0; background:#f8f9ff;">
+                            <button onclick="handleAddToCart(this, '${it.name}', ${it.price}, '${cat}', ${index})">加入購物車</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            container.innerHTML = itemsHtml; // 將生成的 HTML 內容放入容器
+            
+            // 確保容器顯示
+            requestAnimationFrame(() => {
+                container.classList.add('show');
+            });
+        }
+        
+        // 專門處理帶有選項的加入購物車函數 
+        function handleAddToCart(btn, baseName, basePrice, cat, index) {
+            const qtyInput = btn.parentElement.querySelector('.item-qty');
+            const qty = parseInt(qtyInput.value)||1; 
+            
+            let finalName = baseName;
+            let finalPrice = basePrice;
+            const itemID = `item-${cat}-${index}`;
+            let optionsList = [];
+
+            if (cat === '主食') {
+                // 主食邏輯
+                const flavor = document.getElementById(`${itemID}-flavor`).value;
+                const eggCheckbox = document.getElementById(`${itemID}-egg`);
+                
+                optionsList.push(flavor);
+                
+                if (eggCheckbox.checked) {
+                    finalPrice += parseInt(eggCheckbox.dataset.price); // +15
+                    optionsList.push('+糖心蛋');
+                }
+                
+                finalName = `${baseName} (${optionsList.join(', ')})`;
+
+                // 重設主食選項
+                document.getElementById(`${itemID}-flavor`).value = '原味';
+                eggCheckbox.checked = false;
+
+            } else if (baseName === '昏睡紅茶') {
+                // 昏睡紅茶邏輯
+                const milkCheckbox = document.getElementById(`${itemID}-milk`); // 升級鮮奶茶
+                
+                let baseType = '紅茶';
+
+                if (milkCheckbox.checked) {
+                    finalPrice += parseInt(milkCheckbox.dataset.price); // +5
+                    baseType = '鮮奶茶';
+                }
+                optionsList.push(baseType);
+                
+                // 檢查所有加料/加糖選項
+                const addons = [
+                    { id: 'sugar', name: '致死量砂糖' },
+                    { id: 'pudding', name: '粉粿' },
+                    { id: 'pearl', name: '珍珠' },
+                    { id: 'grassjelly', name: '仙草' },
+                    { id: 'qq', name: '綜合QQ球' }
+                ];
+                
+                addons.forEach(addon => {
+                    const checkbox = document.getElementById(`${itemID}-${addon.id}`);
+                    if (checkbox.checked) {
+                        finalPrice += parseInt(checkbox.dataset.price); // +5
+                        optionsList.push(`+${addon.name}`);
+                    }
+                });
+                
+                finalName = `${baseName} [${optionsList.join(' | ')}]`;
+
+                // 重設昏睡紅茶選項
+                milkCheckbox.checked = false;
+                addons.forEach(addon => {
+                    document.getElementById(`${itemID}-${addon.id}`).checked = false;
+                });
+            } else {
+                // 其他普通商品
+                finalName = baseName;
+                finalPrice = basePrice;
+            }
+            
+            // 將帶有選項和價格的商品加入購物車
+            addToCart(finalName, finalPrice, qty); 
+            
+            // 重設數量輸入框
+            qtyInput.value = 1; 
+        }
+
+        // 訂單處理邏輯 (傳送到 Google Sheets)
+        function submitOrder() {
+            const nameEl = document.getElementById('customerName');
+            const name = nameEl.value.trim();
+            
+            const pickupDate = document.getElementById('pickupDate').value; 
+            const pickupTime = document.getElementById('pickupTime').value; 
+            
+            const fullPickupTime = pickupDate + ' ' + pickupTime; 
+            
+            if (!name) { alert('請填寫訂購人姓名'); nameEl.focus(); return; }
+            if (cart.length === 0) { alert('購物車為空，請先加入商品'); return; }
+            
+            const total = cart.reduce((s, it) => s + it.price * it.quantity, 0);
+
+            if (!confirm(`確認送出訂單\n訂購人：${name}\n取餐時間：${pickupDate} ${pickupTime}\n訂單總金額：NT$${total}`)) return;
+            
+            // 準備訂單資料為 JSON 格式
+            const orderData = {
+                customer: name, 
+                total: total, 
+                items: cart.map(it => `${it.name} x${it.quantity} (NT$${it.price})`).join('\n'),
+                pickupTime: fullPickupTime 
+            };
+            
+            // 透過 fetch 將 JSON 資料 POST 給 Google Apps Script
+            fetch(GOOGLE_SHEETS_URL, {
+                method: 'POST',
+                mode: 'no-cors', 
+                cache: 'no-cache',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(orderData)
+            })
+            .then(response => {
+                // 清空購物車和表單
+                cart = [];
+                document.getElementById('customerName').value = '';
+                updateCartCount();
+                renderCart();
+                closeCart();
+                
+                // 簡化成功提示訊息
+                alert('✅ 訂單送出成功！');
+            })
+            .catch(error => {
+                console.error('Error submitting order:', error);
+                alert('❌ 訂單送出失敗！請檢查您的 Apps Script 部署狀態。');
+            });
+        }
+
+        function renderOrderHistory() {
+            const el = document.getElementById('orderHistory');
+            el.innerHTML = ''; 
+        }
+
+        // 確保初始化函式正確執行
+        document.addEventListener('DOMContentLoaded', () => {
+             updateCartCount();
+             generateTimeSlots(); // 確保時間選單生成
+             renderOrderHistory();
+        });
+    </script>
+</body>
+</html>
