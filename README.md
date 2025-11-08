@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
-        /* 為了簡潔，CSS 樣式從略，但它們已包含在您的完整程式碼中 */
+        /* 由於篇幅限制，CSS 樣式在此處省略，確保其與功能邏輯無關 */
         body { 
             font-family: 'Noto Sans TC', Arial, sans-serif; 
             margin: 0; 
@@ -331,7 +331,7 @@
         // 【⭐ 重要：請替換成您最新部署的 Apps Script 網址！】
         const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbxEE9Nu-_Ma0AG5awAawXJneZBh-oFo_n6jblQSF1dXnKjYCNMuFqDzNDB0-MGOgDPw/exec'; 
 
-        // === 【所有菜單項目 - 主食、飲料、甜點】 ===
+        // === 【菜單項目：已調整所有飲料價格為 25 元】 ===
         const menuData = {
             主食: [ 
                 { name:'炒麵麵包 (原味)', price:50 }, 
@@ -342,8 +342,8 @@
                 { name:'可樂', price:25 }, 
                 { name:'芬達', price:25 },
                 { name:'雪碧', price:25 }, 
-                { name:'迎賓酒', price:60 },
-                { name:'昏睡紅茶', price:35 } // 昏睡紅茶基本價
+                { name:'迎賓酒', price:25 }, // 已改為 25
+                { name:'昏睡紅茶', price:25 } // 已改為 25
             ],
             甜點: [ 
                 { name:'手工布丁', price:45 } 
@@ -412,14 +412,12 @@
             updateCartCount();
         }
 
-        // ⭐ 修正問題二：取餐時間選單生成
         function generateTimeSlots() {
             const startTimeMin = 9 * 60 + 30; // 9:30
             const endTimeMin = 13 * 60 + 30; // 13:30
             const interval = 15;
             const select = document.getElementById('pickupTime');
             
-            // 確保 select 元素存在
             if (!select) {
                 console.error('Error: pickupTime select element not found.');
                 return;
@@ -443,7 +441,6 @@
 
         let currentCategory = null;
 
-        // ⭐ 修正問題一：分類餐點顯示邏輯
         function showCategoryItems(cat) {
             const container = document.getElementById('itemsContainer');
             const cards = document.querySelectorAll('.category-card');
@@ -495,41 +492,16 @@
                         </div>
                     `;
                 } else if (it.name === '昏睡紅茶') {
-                    // 昏睡紅茶選項
+                    // ⭐ 調整：昏睡紅茶只保留鮮奶茶選項，價格 +10
                     optionsHtml = `
                         <div class="option-group inline">
-                            <label for="${itemID}-milk" style="font-weight: 500; color: #ff5722;">升級鮮奶茶 (+NT$5)</label>
-                            <input type="checkbox" id="${itemID}-milk" data-price="5" style="width: auto;">
+                            <label for="${itemID}-milk" style="font-weight: 500; color: #ff5722;">升級鮮奶茶 (+NT$10)</label>
+                            <input type="checkbox" id="${itemID}-milk" data-price="10" style="width: auto;">
                         </div>
-
-                        <div class="option-group" style="padding-top: 0; border-top: none;">
-                            <label style="font-weight: 500; color: #ff5722;">加料/加糖 (每項+NT$5):</label>
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px 15px; margin-top: 5px;">
-                                <div class="option-group inline">
-                                    <label for="${itemID}-sugar">致死量砂糖</label>
-                                    <input type="checkbox" id="${itemID}-sugar" data-price="5" style="width: auto;">
-                                </div>
-                                <div class="option-group inline">
-                                    <label for="${itemID}-pudding">粉粿</label>
-                                    <input type="checkbox" id="${itemID}-pudding" data-price="5" style="width: auto;">
-                                </div>
-                                <div class="option-group inline">
-                                    <label for="${itemID}-pearl">珍珠</label>
-                                    <input type="checkbox" id="${itemID}-pearl" data-price="5" style="width: auto;">
-                                </div>
-                                <div class="option-group inline">
-                                    <label for="${itemID}-grassjelly">仙草</label>
-                                    <input type="checkbox" id="${itemID}-grassjelly" data-price="5" style="width: auto;">
-                                </div>
-                                <div class="option-group inline">
-                                    <label for="${itemID}-qq">綜合QQ球</label>
-                                    <input type="checkbox" id="${itemID}-qq" data-price="5" style="width: auto;">
-                                </div>
-                            </div>
-                        </div>
+                        <div style="height: 10px; border-top: 1px dashed #f0f0f0; margin-bottom: 15px;"></div>
                     `;
                 } else {
-                    // 非主食或昏睡紅茶的普通商品 (其他飲料和甜點)
+                    // 其他普通商品 (其他飲料和甜點)
                     optionsHtml = `
                         <div style="height: 10px; border-top: 1px dashed #f0f0f0; margin-bottom: 15px;"></div>
                     `;
@@ -585,41 +557,24 @@
                 eggCheckbox.checked = false;
 
             } else if (baseName === '昏睡紅茶') {
-                // 昏睡紅茶邏輯
+                // ⭐ 調整後的昏睡紅茶邏輯
                 const milkCheckbox = document.getElementById(`${itemID}-milk`); // 升級鮮奶茶
                 
                 let baseType = '紅茶';
 
                 if (milkCheckbox.checked) {
-                    finalPrice += parseInt(milkCheckbox.dataset.price); // +5
+                    const milkPrice = parseInt(milkCheckbox.dataset.price); // +10
+                    finalPrice += milkPrice; 
                     baseType = '鮮奶茶';
                 }
                 optionsList.push(baseType);
-                
-                // 檢查所有加料/加糖選項
-                const addons = [
-                    { id: 'sugar', name: '致死量砂糖' },
-                    { id: 'pudding', name: '粉粿' },
-                    { id: 'pearl', name: '珍珠' },
-                    { id: 'grassjelly', name: '仙草' },
-                    { id: 'qq', name: '綜合QQ球' }
-                ];
-                
-                addons.forEach(addon => {
-                    const checkbox = document.getElementById(`${itemID}-${addon.id}`);
-                    if (checkbox.checked) {
-                        finalPrice += parseInt(checkbox.dataset.price); // +5
-                        optionsList.push(`+${addon.name}`);
-                    }
-                });
                 
                 finalName = `${baseName} [${optionsList.join(' | ')}]`;
 
                 // 重設昏睡紅茶選項
                 milkCheckbox.checked = false;
-                addons.forEach(addon => {
-                    document.getElementById(`${itemID}-${addon.id}`).checked = false;
-                });
+                // 由於已刪除其他加料選項，不需要重設其他 checkbox
+
             } else {
                 // 其他普通商品
                 finalName = baseName;
