@@ -1,4 +1,4 @@
-
+<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
@@ -85,11 +85,6 @@
         .category-card:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 30px rgba(0,0,0,0.1);
-        }
-        .category-card h2 { 
-            margin: 12px 0 0 0;
-            color: #ff5722;
-            font-weight: 600;
         }
         .category-card.active {
             background: #fff5f2;
@@ -427,17 +422,18 @@
 
     <script>
         // 【⭐ 重要：請替換成您最新部署的 Apps Script 網址！】
+        // 注意：這個 URL 應該指向您最新的、已調整欄位順序的 GAS 部署網址。
         const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbxEE9Nu-_Ma0AG5awAawXJneZBh-oFo_n6jblQSF1dXnKjYCNMuFqDzNDB0-MGOgDPw/exec'; 
 
-        // === 【所有菜單項目：已更新迎賓酒價格】 ===
+        // === 【所有菜單項目：已更新極霸炒麵名稱與超極霸價格】 ===
         const menuData = {
             主食: [ 
                 { name:'經典日式炒麵麵包', price:45 }, 
-                { name:'極霸炒麵（牛肉+蝦仁）', price:65 },
-                { name:'超極霸炒麵 (肉量 max)', price:95 }
+                { name:'極霸炒麵 (豬肉)', price:65 }, // 名稱已調整
+                { name:'超極霸炒麵 (肉量 max)', price:90 } // 價格已調整為 90
             ],
             飲料: [ 
-                { name:'迎賓酒', price:35 }, // 價格調整為 35
+                { name:'迎賓酒', price:35 }, 
                 { name:'昏睡紅茶', price:25 }
             ],
             甜點: [ 
@@ -692,7 +688,7 @@
                 const flavor = document.getElementById(`${itemID}-flavor`).value;
                 optionsList.push(`口味: ${flavor}`);
                 
-                finalName = `${baseName} (${optionsList.join(' | ')})`;
+                finalName = `${baseName} [口味: ${flavor}]`;
                 document.getElementById(`${itemID}-flavor`).value = '可樂'; // 預設回到第一個選項
 
             } else if (baseName === '昏睡紅茶') {
@@ -753,9 +749,10 @@
             if (!confirm(`確認送出訂單\n取餐方式: ${orderType}\n班級座號: ${fullID}\n訂購人: ${name}\n取餐時間: ${pickupDate} ${pickupTime}\n訂單總金額: NT$${total}`)) return;
             
             // 準備訂單資料為 JSON 格式 (包含新的欄位)
+            // 由於 GAS 端的欄位順序已調整，這裡只需要將數據準備好
             const orderData = {
-                orderType: orderType, // 新增欄位
-                customerID: fullID, // 班級座號合併
+                orderType: orderType, 
+                customerID: fullID, 
                 customer: name, 
                 total: total, 
                 items: cart.map(it => `${it.name} x${it.quantity} (NT$${it.price})`).join('\n'),
