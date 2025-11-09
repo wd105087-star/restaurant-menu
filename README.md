@@ -429,8 +429,8 @@
         const menuData = {
             主食: [ 
                 { name:'經典日式炒麵麵包', price:45 }, 
-                { name:'極霸炒麵 (豬肉)', price:65 }, // 名稱已調整
-                { name:'超極霸炒麵 (肉量 max)', price:90 } // 價格已調整為 90
+                { name:'極霸炒麵 (豬肉)', price:65 }, 
+                { name:'超極霸炒麵 (肉量 max)', price:90 } 
             ],
             飲料: [ 
                 { name:'迎賓酒', price:35 }, 
@@ -529,7 +529,7 @@
             }
         }
         
-        // 生成班級選單
+        // 生成班級選單 - 已新增「無」選項
         function generateClassSelect() {
             const select = document.getElementById('classSelect');
             if (!select) return;
@@ -540,7 +540,16 @@
             for (let i = 201; i <= 228; i++) classes.push(String(i));
             for (let i = 301; i <= 328; i++) classes.push(String(i));
 
-            select.innerHTML = '<option value="">請選擇班級</option>'; // 預設選項
+            select.innerHTML = ''; 
+            
+            // 新增「無」選項並設為預設
+            const noneOption = document.createElement('option');
+            noneOption.value = '無';
+            noneOption.textContent = '無';
+            noneOption.selected = true; // 設定為預設選中
+            select.appendChild(noneOption);
+            
+            // 添加其他班級選項
             classes.forEach(cls => {
                 const option = document.createElement('option');
                 option.value = cls;
@@ -549,15 +558,24 @@
             });
         }
 
-        // 生成座號選單
+        // 生成座號選單 - 已新增「無」選項
         function generateSeatSelect() {
             const select = document.getElementById('seatSelect');
             if (!select) return;
 
-            select.innerHTML = '<option value="">請選擇座號</option>'; // 預設選項
+            select.innerHTML = ''; 
+            
+            // 新增「無」選項並設為預設
+            const noneOption = document.createElement('option');
+            noneOption.value = '無';
+            noneOption.textContent = '無';
+            noneOption.selected = true; // 設定為預設選中
+            select.appendChild(noneOption);
+
+            // 添加其他座號選項
             for (let i = 1; i <= 38; i++) {
                 const option = document.createElement('option');
-                option.value = String(i).padStart(2, '0'); // 保持兩位數字格式
+                option.value = String(i).padStart(2, '0'); 
                 option.textContent = String(i);
                 select.appendChild(option);
             }
@@ -739,20 +757,29 @@
             const fullPickupTime = pickupDate + ' ' + pickupTime; 
             
             if (!name) { alert('請填寫訂購人姓名'); nameEl.focus(); return; }
-            if (!className) { alert('請選擇班級'); document.getElementById('classSelect').focus(); return; }
-            if (!seatNumber) { alert('請選擇座號'); document.getElementById('seatSelect').focus(); return; }
+            // 班級/座號現在允許為「無」，所以不強制檢查
             if (cart.length === 0) { alert('購物車為空，請先加入商品'); return; }
             
             const total = cart.reduce((s, it) => s + it.price * it.quantity, 0);
-            const fullID = `${className}${seatNumber}`;
+            
+            // 處理班級座號：如果是「無」，則不加入括號
+            let fullID = '';
+            if (className !== '無' && seatNumber !== '無') {
+                fullID = `${className}${seatNumber}`;
+            } else if (className === '無' && seatNumber === '無') {
+                fullID = '無';
+            } else {
+                // 如果只有一個是無，也把另一個顯示出來
+                fullID = className !== '無' ? className : seatNumber;
+            }
+
 
             if (!confirm(`確認送出訂單\n取餐方式: ${orderType}\n班級座號: ${fullID}\n訂購人: ${name}\n取餐時間: ${pickupDate} ${pickupTime}\n訂單總金額: NT$${total}`)) return;
             
             // 準備訂單資料為 JSON 格式 (包含新的欄位)
-            // 由於 GAS 端的欄位順序已調整，這裡只需要將數據準備好
             const orderData = {
                 orderType: orderType, 
-                customerID: fullID, 
+                customerID: fullID, // 傳送處理後的 ID
                 customer: name, 
                 total: total, 
                 items: cart.map(it => `${it.name} x${it.quantity} (NT$${it.price})`).join('\n'),
@@ -773,8 +800,8 @@
                 // 清空購物車和表單
                 cart = [];
                 document.getElementById('customerName').value = '';
-                document.getElementById('classSelect').value = '';
-                document.getElementById('seatSelect').value = '';
+                document.getElementById('classSelect').value = '無'; // 重設為「無」
+                document.getElementById('seatSelect').value = '無'; // 重設為「無」
                 document.querySelector('input[name="orderType"][value="自取"]').checked = true; // 重設為自取
 
                 updateCartCount();
@@ -798,8 +825,8 @@
         document.addEventListener('DOMContentLoaded', () => {
              updateCartCount();
              generateTimeSlots(); 
-             generateClassSelect(); 
-             generateSeatSelect(); 
+             generateClassSelect(); // 調用新的函數
+             generateSeatSelect(); // 調用新的函數
              renderOrderHistory();
         });
     </script>
