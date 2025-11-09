@@ -170,10 +170,11 @@
             font-weight: 400;
             margin: 0; 
         }
-        select, input[type="checkbox"] {
+        select, input[type="checkbox"], input[type="text"] {
             border: 1px solid #ddd;
             border-radius: 4px;
-            padding: 5px;
+            padding: 5px 10px;
+            font-size: 15px;
         }
 
         /* 購物車彈窗 */
@@ -280,6 +281,73 @@
             background-color: #f1f1f1 !important;
             color: #555;
         }
+
+        /* 調整訂單控制區塊佈局以容納更多選單 */
+        #orderControls {
+            display: grid !important; 
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); /* 更靈活的佈局 */
+            gap: 12px 10px !important;
+            align-items: center;
+            padding: 16px;
+        }
+        /* 讓選項組件佔據更多空間 */
+        .order-control-group {
+            display: contents; /* 讓子元素直接參與 grid 佈局 */
+        }
+        .order-control-group label {
+            white-space: nowrap;
+            font-weight: 500; 
+            color: #e65100;
+        }
+        .order-control-group input[type="text"], 
+        .order-control-group select,
+        .order-control-group .radio-group {
+            width: 100%; 
+            box-sizing: border-box; 
+            grid-column: span 1;
+        }
+        .radio-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .radio-group label {
+            font-weight: normal; 
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* 讓送出按鈕佔滿一行或兩欄 */
+        #orderControls #submitOrderBtn {
+            grid-column: 1 / -1; /* 佔滿整行 */
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        /* 調整移動端佈局 */
+        @media (min-width: 601px) {
+            #orderControls {
+                grid-template-columns: auto 1fr auto 1fr auto 1fr; 
+            }
+            .order-control-group:nth-child(1) { grid-column: 1 / 3; } /* 外送/自取佔兩欄 */
+            .order-control-group:nth-child(2) { grid-column: 3 / 5; } /* 姓名佔兩欄 */
+            .order-control-group:nth-child(3) { grid-column: 5 / 7; } /* 班級+座號 佔兩欄 */
+            
+            /* 將日期和時間排在第二行 */
+            .order-control-group:nth-child(4) { grid-column: 1 / 3; } 
+            .order-control-group:nth-child(5) { grid-column: 3 / 5; }
+            .order-control-group:nth-child(6) { grid-column: 5 / 7; }
+        }
+        @media (max-width: 600px) {
+             #orderControls {
+                grid-template-columns: 1fr 1fr; 
+            }
+            .order-control-group, #orderControls #submitOrderBtn {
+                grid-column: 1 / span 2 !important; /* 所有項目在小螢幕上都佔滿兩欄 */
+            }
+        }
     </style>
 </head>
 <body>
@@ -296,17 +364,47 @@
 
     <div id="itemsContainer" aria-live="polite"></div>
 
-    <div id="orderControls" style="margin-top:24px; display:flex; flex-wrap: wrap; gap:12px; align-items:center; background:white; padding:16px; border-radius:12px; box-shadow: 0 2px 12px rgba(255,87,34,0.1);">
-        <label for="customerName" style="font-weight:500; color:#e65100;">訂購人姓名：</label>
-        <input id="customerName" type="text" placeholder="請輸入姓名" style="padding:8px 12px; border-radius:8px; border:1px solid #e0e0e0; background:#f8f9ff; font-size:15px; width: 120px;">
+    <div id="orderControls" style="margin-top:24px; background:white; padding:16px; border-radius:12px; box-shadow: 0 2px 12px rgba(255,87,34,0.1);">
         
-        <label for="pickupDate" style="font-weight:500; color:#e65100;">取餐日期：</label>
-        <input id="pickupDate" type="date" value="2025-11-15" readonly style="padding:8px 12px; border-radius:8px; border:1px solid #e0e0e0; background:#f1f1f1; font-size:15px; width: 140px; cursor: not-allowed;">
-        
-        <label for="pickupTime" style="font-weight:500; color:#e65100;">取餐時間：</label>
-        <select id="pickupTime" style="padding:8px 12px; border-radius:8px; border:1px solid #e0e0e0; background:#f8f9ff; font-size:15px; width: 100px;"></select>
+        <div class="order-control-group">
+            <label style="font-weight:700; color:#e65100;">取餐方式：</label>
+            <div class="radio-group">
+                <label>
+                    <input type="radio" name="orderType" value="自取" checked>
+                    自取
+                </label>
+                <label>
+                    <input type="radio" name="orderType" value="外送">
+                    外送
+                </label>
+            </div>
+        </div>
 
-        <button id="submitOrderBtn" onclick="submitOrder()" style="background:linear-gradient(45deg, #ff5722, #ff7043); color:white; border:none; padding:8px 16px; border-radius:8px; cursor:pointer; font-weight:500; transition:all 0.2s">送出訂單</button>
+        <div class="order-control-group">
+            <label for="customerName">訂購人姓名：</label>
+            <input id="customerName" type="text" placeholder="請輸入姓名">
+        </div>
+        
+        <div class="order-control-group" style="display: flex; gap: 10px;">
+            <div style="flex-grow: 1; min-width: 40%;">
+                <label for="classSelect">班級：</label>
+                <select id="classSelect"></select> </div>
+            <div style="flex-grow: 1; min-width: 40%;">
+                <label for="seatSelect">座號：</label>
+                <select id="seatSelect"></select> </div>
+        </div>
+        
+        <div class="order-control-group">
+            <label for="pickupDate">取餐日期：</label>
+            <input id="pickupDate" type="date" value="2025-11-15" readonly style="cursor: not-allowed; background:#f1f1f1;">
+        </div>
+
+        <div class="order-control-group">
+            <label for="pickupTime">取餐時間：</label>
+            <select id="pickupTime"></select>
+        </div>
+        
+        <button id="submitOrderBtn" onclick="submitOrder()">送出訂單</button>
     </div>
 
     <div id="orderHistory" style="margin-top:16px"></div> 
@@ -331,7 +429,7 @@
         // 【⭐ 重要：請替換成您最新部署的 Apps Script 網址！】
         const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbxEE9Nu-_Ma0AG5awAawXJneZBh-oFo_n6jblQSF1dXnKjYCNMuFqDzNDB0-MGOgDPw/exec'; 
 
-        // === 【菜單項目：已調整所有飲料價格為 25 元】 ===
+        // === 【所有菜單項目】 ===
         const menuData = {
             主食: [ 
                 { name:'炒麵麵包 (原味)', price:50 }, 
@@ -342,8 +440,8 @@
                 { name:'可樂', price:25 }, 
                 { name:'芬達', price:25 },
                 { name:'雪碧', price:25 }, 
-                { name:'迎賓酒', price:25 }, // 已改為 25
-                { name:'昏睡紅茶', price:25 } // 已改為 25
+                { name:'迎賓酒', price:25 },
+                { name:'昏睡紅茶', price:25 }
             ],
             甜點: [ 
                 { name:'手工布丁', price:45 } 
@@ -437,6 +535,40 @@
                 select.appendChild(option);
             }
         }
+        
+        // ⭐ 新增：生成班級選單
+        function generateClassSelect() {
+            const select = document.getElementById('classSelect');
+            if (!select) return;
+
+            // 定義班級範圍
+            const classes = [];
+            for (let i = 101; i <= 128; i++) classes.push(String(i));
+            for (let i = 201; i <= 228; i++) classes.push(String(i));
+            for (let i = 301; i <= 328; i++) classes.push(String(i));
+
+            select.innerHTML = '<option value="">請選擇班級</option>'; // 預設選項
+            classes.forEach(cls => {
+                const option = document.createElement('option');
+                option.value = cls;
+                option.textContent = cls;
+                select.appendChild(option);
+            });
+        }
+
+        // ⭐ 新增：生成座號選單
+        function generateSeatSelect() {
+            const select = document.getElementById('seatSelect');
+            if (!select) return;
+
+            select.innerHTML = '<option value="">請選擇座號</option>'; // 預設選項
+            for (let i = 1; i <= 38; i++) {
+                const option = document.createElement('option');
+                option.value = String(i).padStart(2, '0'); // 保持兩位數字格式
+                option.textContent = String(i);
+                select.appendChild(option);
+            }
+        }
 
 
         let currentCategory = null;
@@ -492,7 +624,7 @@
                         </div>
                     `;
                 } else if (it.name === '昏睡紅茶') {
-                    // ⭐ 調整：昏睡紅茶只保留鮮奶茶選項，價格 +10
+                    // 昏睡紅茶只保留鮮奶茶選項，價格 +10
                     optionsHtml = `
                         <div class="option-group inline">
                             <label for="${itemID}-milk" style="font-weight: 500; color: #ff5722;">升級鮮奶茶 (+NT$10)</label>
@@ -528,7 +660,6 @@
             });
         }
         
-        // 專門處理帶有選項的加入購物車函數 
         function handleAddToCart(btn, baseName, basePrice, cat, index) {
             const qtyInput = btn.parentElement.querySelector('.item-qty');
             const qty = parseInt(qtyInput.value)||1; 
@@ -539,74 +670,70 @@
             let optionsList = [];
 
             if (cat === '主食') {
-                // 主食邏輯
                 const flavor = document.getElementById(`${itemID}-flavor`).value;
                 const eggCheckbox = document.getElementById(`${itemID}-egg`);
                 
                 optionsList.push(flavor);
                 
                 if (eggCheckbox.checked) {
-                    finalPrice += parseInt(eggCheckbox.dataset.price); // +15
+                    finalPrice += parseInt(eggCheckbox.dataset.price); 
                     optionsList.push('+糖心蛋');
                 }
                 
                 finalName = `${baseName} (${optionsList.join(', ')})`;
 
-                // 重設主食選項
                 document.getElementById(`${itemID}-flavor`).value = '原味';
                 eggCheckbox.checked = false;
 
             } else if (baseName === '昏睡紅茶') {
-                // ⭐ 調整後的昏睡紅茶邏輯
-                const milkCheckbox = document.getElementById(`${itemID}-milk`); // 升級鮮奶茶
-                
+                const milkCheckbox = document.getElementById(`${itemID}-milk`); 
                 let baseType = '紅茶';
 
                 if (milkCheckbox.checked) {
-                    const milkPrice = parseInt(milkCheckbox.dataset.price); // +10
-                    finalPrice += milkPrice; 
+                    finalPrice += parseInt(milkCheckbox.dataset.price); 
                     baseType = '鮮奶茶';
                 }
                 optionsList.push(baseType);
                 
                 finalName = `${baseName} [${optionsList.join(' | ')}]`;
-
-                // 重設昏睡紅茶選項
                 milkCheckbox.checked = false;
-                // 由於已刪除其他加料選項，不需要重設其他 checkbox
-
             } else {
-                // 其他普通商品
                 finalName = baseName;
                 finalPrice = basePrice;
             }
             
-            // 將帶有選項和價格的商品加入購物車
             addToCart(finalName, finalPrice, qty); 
-            
-            // 重設數量輸入框
             qtyInput.value = 1; 
         }
 
         // 訂單處理邏輯 (傳送到 Google Sheets)
         function submitOrder() {
+            // 獲取所有新增加的資訊
+            const orderType = document.querySelector('input[name="orderType"]:checked').value;
             const nameEl = document.getElementById('customerName');
-            const name = nameEl.value.trim();
+            const className = document.getElementById('classSelect').value;
+            const seatNumber = document.getElementById('seatSelect').value;
             
+            const name = nameEl.value.trim();
             const pickupDate = document.getElementById('pickupDate').value; 
             const pickupTime = document.getElementById('pickupTime').value; 
             
             const fullPickupTime = pickupDate + ' ' + pickupTime; 
             
             if (!name) { alert('請填寫訂購人姓名'); nameEl.focus(); return; }
+            if (!className) { alert('請選擇班級'); document.getElementById('classSelect').focus(); return; }
+            if (!seatNumber) { alert('請選擇座號'); document.getElementById('seatSelect').focus(); return; }
             if (cart.length === 0) { alert('購物車為空，請先加入商品'); return; }
             
             const total = cart.reduce((s, it) => s + it.price * it.quantity, 0);
+            const fullID = `${className}${seatNumber}`;
 
-            if (!confirm(`確認送出訂單\n訂購人：${name}\n取餐時間：${pickupDate} ${pickupTime}\n訂單總金額：NT$${total}`)) return;
+            if (!confirm(`確認送出訂單\n取餐方式: ${orderType}\n班級座號: ${fullID}\n訂購人: ${name}\n取餐時間: ${pickupDate} ${pickupTime}\n訂單總金額: NT$${total}`)) return;
             
-            // 準備訂單資料為 JSON 格式
+            // 準備訂單資料為 JSON 格式 (包含新的欄位)
             const orderData = {
+                orderType: orderType, // 新增欄位
+                customerID: fullID, // 班級座號合併
                 customer: name, 
                 total: total, 
                 items: cart.map(it => `${it.name} x${it.quantity} (NT$${it.price})`).join('\n'),
@@ -627,11 +754,14 @@
                 // 清空購物車和表單
                 cart = [];
                 document.getElementById('customerName').value = '';
+                document.getElementById('classSelect').value = '';
+                document.getElementById('seatSelect').value = '';
+                document.querySelector('input[name="orderType"][value="自取"]').checked = true; // 重設為自取
+
                 updateCartCount();
                 renderCart();
                 closeCart();
                 
-                // 簡化成功提示訊息
                 alert('✅ 訂單送出成功！');
             })
             .catch(error => {
@@ -645,10 +775,12 @@
             el.innerHTML = ''; 
         }
 
-        // 確保初始化函式正確執行
+        // 確保所有初始化函式正確執行
         document.addEventListener('DOMContentLoaded', () => {
              updateCartCount();
-             generateTimeSlots(); // 確保時間選單生成
+             generateTimeSlots(); 
+             generateClassSelect(); // ⭐ 新增初始化
+             generateSeatSelect(); // ⭐ 新增初始化
              renderOrderHistory();
         });
     </script>
