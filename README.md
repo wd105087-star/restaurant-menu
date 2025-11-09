@@ -429,18 +429,15 @@
         // 【⭐ 重要：請替換成您最新部署的 Apps Script 網址！】
         const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbxEE9Nu-_Ma0AG5awAawXJneZBh-oFo_n6jblQSF1dXnKjYCNMuFqDzNDB0-MGOgDPw/exec'; 
 
-        // === 【所有菜單項目】 ===
+        // === 【所有菜單項目：已更新迎賓酒價格】 ===
         const menuData = {
             主食: [ 
-                { name:'炒麵麵包 (原味)', price:50 }, 
+                { name:'經典日式炒麵麵包', price:45 }, 
                 { name:'極霸炒麵（牛肉+蝦仁）', price:65 },
                 { name:'超極霸炒麵 (肉量 max)', price:95 }
             ],
             飲料: [ 
-                { name:'可樂', price:25 }, 
-                { name:'芬達', price:25 },
-                { name:'雪碧', price:25 }, 
-                { name:'迎賓酒', price:25 },
+                { name:'迎賓酒', price:35 }, // 價格調整為 35
                 { name:'昏睡紅茶', price:25 }
             ],
             甜點: [ 
@@ -536,7 +533,7 @@
             }
         }
         
-        // ⭐ 新增：生成班級選單
+        // 生成班級選單
         function generateClassSelect() {
             const select = document.getElementById('classSelect');
             if (!select) return;
@@ -556,7 +553,7 @@
             });
         }
 
-        // ⭐ 新增：生成座號選單
+        // 生成座號選單
         function generateSeatSelect() {
             const select = document.getElementById('seatSelect');
             if (!select) return;
@@ -608,7 +605,7 @@
                 const itemID = `item-${cat}-${index}`; 
                 
                 if (cat === '主食') {
-                    // 主食選項
+                    // 主食選項：保留原味、海苔、沅味、辣味
                     optionsHtml = `
                         <div class="option-group">
                             <label for="${itemID}-flavor">選擇口味：</label>
@@ -616,24 +613,39 @@
                                 <option value="原味" selected>原味</option>
                                 <option value="海苔">海苔</option>
                                 <option value="沅味">沅味</option>
+                                <option value="辣味">辣味</option>
                             </select>
                         </div>
-                        <div class="option-group inline">
-                            <label for="${itemID}-egg" style="margin: 0;">加購糖心蛋 (+NT$15)</label>
-                            <input type="checkbox" id="${itemID}-egg" data-price="15" style="width: auto;">
+                        <div style="height: 10px; border-top: 1px dashed #f0f0f0; margin-bottom: 15px;"></div>
+                    `;
+                } else if (it.name === '迎賓酒') {
+                    // 迎賓酒選項：移除原味
+                    optionsHtml = `
+                        <div class="option-group">
+                            <label for="${itemID}-flavor">選擇口味：</label>
+                            <select id="${itemID}-flavor">
+                                <option value="可樂" selected>可樂</option>
+                                <option value="芬達">芬達</option>
+                                <option value="雪碧">雪碧</option>
+                            </select>
                         </div>
+                        <div style="height: 10px; border-top: 1px dashed #f0f0f0; margin-bottom: 15px;"></div>
                     `;
                 } else if (it.name === '昏睡紅茶') {
-                    // 昏睡紅茶只保留鮮奶茶選項，價格 +10
+                    // 昏睡紅茶：鮮奶茶價格變為 +15，新增致死量砂糖
                     optionsHtml = `
                         <div class="option-group inline">
-                            <label for="${itemID}-milk" style="font-weight: 500; color: #ff5722;">升級鮮奶茶 (+NT$10)</label>
-                            <input type="checkbox" id="${itemID}-milk" data-price="10" style="width: auto;">
+                            <label for="${itemID}-milk" style="font-weight: 500; color: #ff5722;">升級鮮奶茶 (+NT$15)</label>
+                            <input type="checkbox" id="${itemID}-milk" data-price="15" style="width: auto;">
+                        </div>
+                        <div class="option-group inline">
+                            <label for="${itemID}-sugar" style="font-weight: 500; color: #333;">致死量砂糖 (免費)</label>
+                            <input type="checkbox" id="${itemID}-sugar" data-price="0" style="width: auto;">
                         </div>
                         <div style="height: 10px; border-top: 1px dashed #f0f0f0; margin-bottom: 15px;"></div>
                     `;
                 } else {
-                    // 其他普通商品 (其他飲料和甜點)
+                    // 其他普通商品 (甜點)
                     optionsHtml = `
                         <div style="height: 10px; border-top: 1px dashed #f0f0f0; margin-bottom: 15px;"></div>
                     `;
@@ -671,32 +683,42 @@
 
             if (cat === '主食') {
                 const flavor = document.getElementById(`${itemID}-flavor`).value;
-                const eggCheckbox = document.getElementById(`${itemID}-egg`);
-                
-                optionsList.push(flavor);
-                
-                if (eggCheckbox.checked) {
-                    finalPrice += parseInt(eggCheckbox.dataset.price); 
-                    optionsList.push('+糖心蛋');
-                }
+                optionsList.push(`口味: ${flavor}`);
                 
                 finalName = `${baseName} (${optionsList.join(', ')})`;
-
                 document.getElementById(`${itemID}-flavor`).value = '原味';
-                eggCheckbox.checked = false;
+
+            } else if (baseName === '迎賓酒') {
+                const flavor = document.getElementById(`${itemID}-flavor`).value;
+                optionsList.push(`口味: ${flavor}`);
+                
+                finalName = `${baseName} (${optionsList.join(' | ')})`;
+                document.getElementById(`${itemID}-flavor`).value = '可樂'; // 預設回到第一個選項
 
             } else if (baseName === '昏睡紅茶') {
                 const milkCheckbox = document.getElementById(`${itemID}-milk`); 
+                const sugarCheckbox = document.getElementById(`${itemID}-sugar`); 
+                
                 let baseType = '紅茶';
 
+                // 處理升級鮮奶茶 (+15)
                 if (milkCheckbox.checked) {
-                    finalPrice += parseInt(milkCheckbox.dataset.price); 
+                    finalPrice += parseInt(milkCheckbox.dataset.price); // +15
                     baseType = '鮮奶茶';
                 }
                 optionsList.push(baseType);
                 
+                // 處理致死量砂糖 (免費)
+                if (sugarCheckbox.checked) {
+                    optionsList.push('致死量砂糖');
+                }
+                
                 finalName = `${baseName} [${optionsList.join(' | ')}]`;
+                
+                // 重設選項
                 milkCheckbox.checked = false;
+                sugarCheckbox.checked = false;
+
             } else {
                 finalName = baseName;
                 finalPrice = basePrice;
@@ -779,8 +801,8 @@
         document.addEventListener('DOMContentLoaded', () => {
              updateCartCount();
              generateTimeSlots(); 
-             generateClassSelect(); // ⭐ 新增初始化
-             generateSeatSelect(); // ⭐ 新增初始化
+             generateClassSelect(); 
+             generateSeatSelect(); 
              renderOrderHistory();
         });
     </script>
